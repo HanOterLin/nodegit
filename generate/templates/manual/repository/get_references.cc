@@ -1,28 +1,34 @@
 NAN_METHOD(GitRepository::GetReferences)
 {
-  if (info.Length() == 0 || !info[0]->IsFunction()) {
+  if (!info[info.Length() - 1]->IsFunction()) {
     return Nan::ThrowError("Callback is required and must be a Function.");
   }
 
-  GetReferencesBaton* baton = new GetReferencesBaton;
+  GetReferencesBaton* baton = new GetReferencesBaton();
 
   baton->error_code = GIT_OK;
   baton->error = NULL;
   baton->out = new std::vector<git_reference *>;
   baton->repo = Nan::ObjectWrap::Unwrap<GitRepository>(info.This())->GetValue();
 
-  Nan::Callback *callback = new Nan::Callback(Local<Function>::Cast(info[0]));
-  GetReferencesWorker *worker = new GetReferencesWorker(baton, callback);
-  worker->SaveToPersistent("repo", info.This());
-  Nan::AsyncQueueWorker(worker);
+  Nan::Callback *callback = new Nan::Callback(Local<Function>::Cast(info[info.Length() - 1]));
+  std::map<std::string, std::shared_ptr<nodegit::CleanupHandle>> cleanupHandles;
+  GetReferencesWorker *worker = new GetReferencesWorker(baton, callback, cleanupHandles);
+  worker->Reference<GitRepository>("repo", info.This());
+  nodegit::Context *nodegitContext = reinterpret_cast<nodegit::Context *>(info.Data().As<External>()->Value());
+  nodegitContext->QueueWorker(worker);
   return;
+}
+
+nodegit::LockMaster GitRepository::GetReferencesWorker::AcquireLocks() {
+  nodegit::LockMaster lockMaster(true, baton->repo);
+  return lockMaster;
 }
 
 void GitRepository::GetReferencesWorker::Execute()
 {
   giterr_clear();
 
-  LockMaster lockMaster(true, baton->repo);
   git_repository *repo = baton->repo;
 
   git_strarray reference_names;
@@ -74,6 +80,26 @@ void GitRepository::GetReferencesWorker::Execute()
       baton->out->push_back(reference);
     }
   }
+}
+
+void GitRepository::GetReferencesWorker::HandleErrorCallback() {
+  if (baton->error) {
+    if (baton->error->message) {
+      free((void *)baton->error->message);
+    }
+
+    free((void *)baton->error);
+  }
+
+  while (baton->out->size()) {
+    git_reference *referenceToFree = baton->out->back();
+    baton->out->pop_back();
+    git_reference_free(referenceToFree);
+  }
+
+  delete baton->out;
+
+  delete baton;
 }
 
 void GitRepository::GetReferencesWorker::HandleOKCallback()
@@ -130,4 +156,6 @@ void GitRepository::GetReferencesWorker::HandleOKCallback()
   {
     callback->Call(0, NULL, async_resource);
   }
+
+  delete baton;
 }

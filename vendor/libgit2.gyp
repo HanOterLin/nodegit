@@ -9,7 +9,9 @@
     "gcc_version%": 0,
     "is_electron%": "<!(node ../utils/isBuildingForElectron.js <(node_root_dir))",
     "is_clang%": 0,
-    "is_IBMi%": "<!(node -p \"os.platform() == 'aix' && os.type() == 'OS400' ? 1 : 0\")"
+    "is_IBMi%": "<!(node -p \"os.platform() == 'aix' && os.type() == 'OS400' ? 1 : 0\")",
+    "electron_openssl_root%": "<!(node ../utils/getElectronOpenSSLRoot.js <(module_root_dir))",
+    "electron_openssl_static%": "<!(node -p \"process.platform !== 'linux' || process.env.NODEGIT_OPENSSL_STATIC_LINK === '1' ? 1 : 0\")",
   },
   "targets": [
     {
@@ -21,11 +23,7 @@
         "GIT_SSH_MEMORY_CREDENTIALS",
         "LIBGIT2_NO_FEATURES_H",
         "GIT_SHA1_COLLISIONDETECT",
-        # "GIT_USE_NSEC", We've been shipping without NSEC for awhile
-        # Turning NSEC on should be left up to application maintainer
-        # There may be negative performance impacts using nodegit with
-        # NSEC turned on in a repository that was cloned with nodegit
-        # with NSEC turned off
+        "GIT_USE_NSEC",
         "GIT_HTTPS",
         # Node's util.h may be accidentally included so use this to guard
         # against compilation error.
@@ -40,10 +38,16 @@
         "libgit2/include/git2/sys/hashsig.h",
         "libgit2/include/git2/sys/merge.h",
         "libgit2/include/git2/worktree.h",
+        "libgit2/src/allocators/failalloc.c",
+        "libgit2/src/allocators/failalloc.h",
         "libgit2/src/allocators/stdalloc.c",
         "libgit2/src/allocators/stdalloc.h",
         "libgit2/src/commit.c",
         "libgit2/src/commit.h",
+        "libgit2/src/commit_graph.c",
+        "libgit2/src/commit_graph.h",
+        "libgit2/src/custom_tls.c",
+        "libgit2/src/custom_tls.h",
         "libgit2/src/alloc.c",
         "libgit2/src/alloc.h",
         "libgit2/src/annotated_commit.c",
@@ -51,6 +55,7 @@
         "libgit2/src/apply.c",
         "libgit2/src/apply.h",
         "libgit2/src/array.h",
+        "libgit2/src/assert_safe.h",
         "libgit2/src/attr_file.c",
         "libgit2/src/attr_file.h",
         "libgit2/src/attr.c",
@@ -66,8 +71,6 @@
         "libgit2/src/blob.h",
         "libgit2/src/branch.c",
         "libgit2/src/branch.h",
-        "libgit2/src/buf_text.c",
-        "libgit2/src/buf_text.h",
         "libgit2/src/buffer.c",
         "libgit2/src/buffer.h",
         "libgit2/src/cache.c",
@@ -114,6 +117,8 @@
         "libgit2/src/diff.h",
         "libgit2/src/errors.c",
         "libgit2/src/errors.h",
+        "libgit2/src/email.c",
+        "libgit2/src/email.h",
         "libgit2/src/fetch.c",
         "libgit2/src/fetch.h",
         "libgit2/src/fetchhead.c",
@@ -124,7 +129,6 @@
         "libgit2/src/futils.h",
         "libgit2/src/filter.c",
         "libgit2/src/filter.h",
-        "libgit2/src/global.c",
         "libgit2/src/global.h",
         "libgit2/src/graph.c",
         "libgit2/src/hash.c",
@@ -148,9 +152,13 @@
         "libgit2/src/iterator.c",
         "libgit2/src/iterator.h",
         "libgit2/src/khash.h",
+        "libgit2/src/libgit2.c",
+        "libgit2/src/libgit2.h",
         "libgit2/src/mailmap.c",
         "libgit2/src/mailmap.h",
         "libgit2/src/map.h",
+        "libgit2/src/midx.c",
+        "libgit2/src/midx.h",
         "libgit2/src/merge_driver.c",
         "libgit2/src/merge_file.c",
         "libgit2/src/merge.c",
@@ -181,12 +189,6 @@
         "libgit2/src/oidarray.h",
         "libgit2/src/oidmap.c",
         "libgit2/src/oidmap.h",
-        "libgit2/src/streams/mbedtls.c",
-        "libgit2/src/streams/mbedtls.h",
-        "libgit2/src/streams/openssl.c",
-        "libgit2/src/streams/openssl.h",
-        "libgit2/src/streams/registry.c",
-        "libgit2/src/streams/registry.h",
         "libgit2/src/pack-objects.c",
         "libgit2/src/pack-objects.h",
         "libgit2/src/pack.c",
@@ -216,7 +218,6 @@
         "libgit2/src/reader.h",
         "libgit2/src/rebase.c",
         "libgit2/src/refdb_fs.c",
-        "libgit2/src/refdb_fs.h",
         "libgit2/src/refdb.c",
         "libgit2/src/refdb.h",
         "libgit2/src/reflog.c",
@@ -237,18 +238,27 @@
         "libgit2/src/revparse.c",
         "libgit2/src/revwalk.c",
         "libgit2/src/revwalk.h",
-        "libgit2/src/settings.c",
-        "libgit2/src/sha1_lookup.c",
-        "libgit2/src/sha1_lookup.h",
+        "libgit2/src/runtime.c",
+        "libgit2/src/runtime.h",
+        "libgit2/src/settings.h",
         "libgit2/src/signature.c",
         "libgit2/src/signature.h",
         "libgit2/src/streams/socket.c",
         "libgit2/src/streams/socket.h",
+        "libgit2/src/streams/openssl_legacy.c",
+        "libgit2/src/streams/openssl_legacy.h",
         "libgit2/src/sortedcache.c",
         "libgit2/src/sortedcache.h",
         "libgit2/src/stash.c",
         "libgit2/src/status.c",
         "libgit2/src/status.h",
+        "libgit2/src/strarray.c",
+        "libgit2/src/streams/mbedtls.c",
+        "libgit2/src/streams/mbedtls.h",
+        "libgit2/src/streams/openssl.c",
+        "libgit2/src/streams/openssl.h",
+        "libgit2/src/streams/registry.c",
+        "libgit2/src/streams/registry.h",
         "libgit2/src/strmap.c",
         "libgit2/src/strmap.h",
         "libgit2/src/strnlen.h",
@@ -258,17 +268,21 @@
         "libgit2/src/sysdir.h",
         "libgit2/src/tag.c",
         "libgit2/src/tag.h",
-        "libgit2/src/thread-utils.c",
-        "libgit2/src/thread-utils.h",
+        "libgit2/src/thread.c",
+        "libgit2/src/thread.h",
+        "libgit2/src/threadstate.c",
+        "libgit2/src/threadstate.h",
         "libgit2/src/trace.c",
         "libgit2/src/trace.h",
         "libgit2/src/trailer.c",
         "libgit2/src/transaction.c",
         "libgit2/src/transport.c",
-        "libgit2/src/transports/cred_helpers.c",
-        "libgit2/src/transports/cred.c",
+        "libgit2/src/transports/credential_helpers.c",
+        "libgit2/src/transports/credential.c",
         "libgit2/src/transports/git.c",
         "libgit2/src/transports/local.c",
+        "libgit2/src/transports/httpclient.h",
+        "libgit2/src/transports/httpclient.c",
         "libgit2/src/transports/smart_pkt.c",
         "libgit2/src/transports/smart_protocol.c",
         "libgit2/src/transports/smart.c",
@@ -282,6 +296,8 @@
         "libgit2/src/userdiff.h",
         "libgit2/src/util.c",
         "libgit2/src/util.h",
+        "libgit2/src/utf8.c",
+        "libgit2/src/utf8.h",
         "libgit2/src/varint.c",
         "libgit2/src/varint.h",
         "libgit2/src/vector.c",
@@ -319,36 +335,36 @@
           ]
         }],
         ["OS=='mac'", {
-            "conditions": [
-              ["<(is_electron) == 1", {
-                "include_dirs": [
-                  "openssl/include"
-                ]
-              }]
-            ],
-            "defines": [
-                "GIT_SECURE_TRANSPORT",
-                "GIT_USE_STAT_MTIMESPEC",
-                "GIT_REGEX_REGCOMP_L",
-                "GIT_USE_ICONV"
-            ],
-            "sources": [
-                "libgit2/src/streams/stransport.c",
-                "libgit2/src/streams/stransport.h"
-            ],
-            "libraries": [
-              "-liconv",
-            ],
-            "link_settings": {
-                "xcode_settings": {
-                    "OTHER_LDFLAGS": [
-                        "-framework Security",
-                        "-framework CoreFoundation"
-                    ],
-                }
-            }
+          "defines": [
+              "GIT_SECURE_TRANSPORT",
+              "GIT_USE_STAT_MTIMESPEC",
+              "GIT_REGEX_REGCOMP_L",
+              "GIT_USE_ICONV"
+          ],
+          "sources": [
+              "libgit2/src/streams/stransport.c",
+              "libgit2/src/streams/stransport.h"
+          ],
+          "libraries": [
+            "-liconv",
+          ],
+          "link_settings": {
+              "xcode_settings": {
+                  "OTHER_LDFLAGS": [
+                      "-framework Security",
+                      "-framework CoreFoundation"
+                  ],
+              }
+          }
         }],
         ["OS=='mac' or OS=='linux' or OS.endswith('bsd') or <(is_IBMi) == 1", {
+          "conditions": [
+            ["<(is_electron) == 1 and <(electron_openssl_static) == 1", {
+              "include_dirs": [
+                "<(electron_openssl_root)/include"
+              ]
+            }]
+          ],
           "dependencies": [
             "ntlmclient"
           ],
@@ -424,7 +440,7 @@
                 },
               }],
               ["<(is_electron) == 1", {
-                "include_dirs": ["openssl/include"]
+                "include_dirs": ["<(electron_openssl_root)/include"]
               }]
             ],
           },
@@ -441,6 +457,8 @@
             4013,
           ],
           "sources": [
+            "libgit2/src/allocators/win32_leakcheck.c",
+            "libgit2/src/allocators/win32_leakcheck.h",
             "libgit2/src/transports/winhttp.c",
             "libgit2/src/win32/dir.c",
             "libgit2/src/win32/dir.h",
@@ -467,6 +485,8 @@
             "libgit2/src/win32/w32_buffer.c",
             "libgit2/src/win32/w32_buffer.h",
             "libgit2/src/win32/w32_common.h",
+            "libgit2/src/win32/w32_leakcheck.c",
+            "libgit2/src/win32/w32_leakcheck.h",
             "libgit2/src/win32/w32_util.c",
             "libgit2/src/win32/w32_util.h",
           ],
@@ -477,6 +497,7 @@
           "sources": [
             "libgit2/src/unix/map.c",
             "libgit2/src/unix/posix.h",
+            "libgit2/src/unix/pthread.c",
             "libgit2/src/unix/pthread.h",
             "libgit2/src/unix/realpath.c",
           ],
@@ -581,6 +602,7 @@
         "libssh2/src/pem.c",
         "libssh2/src/session.c",
         "libssh2/src/userauth.c",
+        "libssh2/src/agent_win.c",
       ],
       "include_dirs": [
         ".",
@@ -595,20 +617,24 @@
         ]
       },
       "conditions": [
-        ["OS=='mac' and <(is_electron) == 1", {
-          "include_dirs": [
-            "openssl/include",
-          ]
+        ["OS=='mac' or OS=='linux' or OS.endswith('bsd') or <(is_IBMi) == 1", {
+          "conditions": [
+            ["<(is_electron) == 1 and <(electron_openssl_static) == 1", {
+              "include_dirs": [
+                "<(electron_openssl_root)/include"
+              ]
+            }]
+          ],
         }],
         ["OS=='win'", {
           "conditions": [
             ["<(is_electron) == 1", {
               "include_dirs": [
-                "openssl/include"
+                "<(electron_openssl_root)/include"
               ],
               "libraries": [
-                "<(module_root_dir)/vendor/openssl/lib/libssl.lib",
-                "<(module_root_dir)/vendor/openssl/lib/libcrypto.lib"
+                "<(electron_openssl_root)/lib/libssl.lib",
+                "<(electron_openssl_root)/lib/libcrypto.lib"
               ]
             }, {
               "defines": [
@@ -653,11 +679,16 @@
         "libgit2/deps/ntlmclient/util.c",
         "libgit2/deps/ntlmclient/util.h"
       ],
+      "defines": [
+        "UNICODE_BUILTIN"
+      ],
       "conditions": [
-        ["OS=='mac' and <(is_electron) == 1", {
-          "include_dirs": ["openssl/include"]
-        }],
         ["OS=='mac'", {
+          "conditions": [
+            ["<(is_electron) == 1", {
+              "include_dirs": ["<(electron_openssl_root)/include"]
+            }]
+          ],
           "sources": [
             "libgit2/deps/ntlmclient/crypt_commoncrypto.c",
             "libgit2/deps/ntlmclient/crypt_commoncrypto.h"
@@ -667,6 +698,11 @@
           ]
         }],
         ["OS=='linux'", {
+          "conditions": [
+            ["<(is_electron) == 1 and <(electron_openssl_static) == 1", {
+              "include_dirs": ["<(electron_openssl_root)/include"]
+            }]
+          ],
           "sources": [
             "libgit2/deps/ntlmclient/crypt_openssl.c",
             "libgit2/deps/ntlmclient/crypt_openssl.h"

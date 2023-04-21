@@ -167,229 +167,6 @@ describe("Filter", function() {
     });
   });
 
-  describe("Initialize", function(){
-    it("initializes successfully", function() {
-      var test = this;
-      var initialized = false;
-      return Registry.register(filterName, {
-        initialize: function() {
-          initialized = true;
-          return NodeGit.Error.CODE.OK;
-        },
-        apply: function() {},
-        check: function() {
-          return NodeGit.Error.CODE.PASSTHROUGH;
-        }
-      }, 0)
-      .then(function(result) {
-        assert.strictEqual(result, NodeGit.Error.CODE.OK);
-      })
-      .then(function() {
-        return fse.writeFile(
-          packageJsonPath,
-          "Changing content to trigger checkout"
-        );
-      })
-      .then(function() {
-        var opts = {
-          checkoutStrategy: Checkout.STRATEGY.FORCE,
-          paths: "package.json"
-        };
-        return Checkout.head(test.repository, opts);
-      })
-      .then(function() {
-        assert.strictEqual(initialized, true);
-      });
-    });
-
-    it("initializes successfully even on garbage collect", function() {
-      var test = this;
-      var initialized = false;
-      return Registry.register(filterName, {
-        initialize: function() {
-          initialized = true;
-          return NodeGit.Error.CODE.OK;
-        },
-        apply: function() {},
-        check: function() {
-          return NodeGit.Error.CODE.PASSTHROUGH;
-        }
-      }, 0)
-      .then(function(result) {
-        assert.strictEqual(result, NodeGit.Error.CODE.OK);
-        garbageCollect();
-
-        return fse.writeFile(
-          packageJsonPath,
-          "Changing content to trigger checkout"
-        );
-      })
-      .then(function() {
-        var opts = {
-          checkoutStrategy: Checkout.STRATEGY.FORCE,
-          paths: "package.json"
-        };
-        return Checkout.head(test.repository, opts);
-      })
-      .then(function() {
-        assert.strictEqual(initialized, true);
-      });
-    });
-
-    it("does not initialize successfully", function() {
-      var test = this;
-      var initialized = false;
-      return Registry.register(filterName, {
-        initialize: function() {
-          initialized = true;
-          return NodeGit.Error.CODE.ERROR;
-        },
-        apply: function() {},
-        check: function() {
-          return NodeGit.Error.CODE.PASSTHROUGH;
-        }
-      }, 0)
-      .then(function(result) {
-        assert.strictEqual(result, NodeGit.Error.CODE.OK);
-      })
-      .then(function() {
-        return fse.writeFile(
-          packageJsonPath,
-          "Changing content to trigger checkout"
-        );
-      })
-      .then(function() {
-        var opts = {
-          checkoutStrategy: Checkout.STRATEGY.FORCE,
-          paths: "package.json"
-        };
-        return Checkout.head(test.repository, opts);
-      })
-      .then(function(head) {
-        assert.fail(head, undefined, "Should not have actually checked out");
-      })
-      .catch(function(error) {
-        assert.strictEqual(initialized, true);
-      });
-    });
-  });
-
-  describe("Shutdown", function() {
-    it("filter successfully shuts down", function() {
-      var test = this;
-      var shutdown = false;
-      return Registry.register(filterName, {
-        apply: function() {},
-        check: function(){
-          return NodeGit.Error.CODE.PASSTHROUGH;
-        },
-        shutdown: function(){
-          shutdown = true;
-        }
-      }, 0)
-        .then(function(result) {
-          assert.strictEqual(result, NodeGit.Error.CODE.OK);
-          return fse.writeFile(
-            packageJsonPath,
-            "Changing content to trigger checkout",
-            { encoding: "utf-8" }
-          );
-        })
-        .then(function() {
-          var opts = {
-            checkoutStrategy: Checkout.STRATEGY.FORCE,
-            paths: "package.json"
-          };
-          return Checkout.head(test.repository, opts);
-        })
-        .then(function() {
-          return Registry.unregister(filterName);
-        })
-        .then(function(result) {
-          assert.strictEqual(result, NodeGit.Error.CODE.OK);
-          assert.strictEqual(shutdown, true);
-        });
-    });
-
-    it("filter successfully shuts down on garbage collect", function() {
-      var test = this;
-      var shutdown = false;
-      return Registry.register(filterName, {
-        apply: function() {},
-        check: function(){
-          return NodeGit.Error.CODE.PASSTHROUGH;
-        },
-        shutdown: function(){
-          shutdown = true;
-        }
-      }, 0)
-        .then(function(result) {
-          assert.strictEqual(result, NodeGit.Error.CODE.OK);
-          return fse.writeFile(
-            packageJsonPath,
-            "Changing content to trigger checkout",
-            { encoding: "utf-8" }
-          );
-        })
-        .then(function() {
-          var opts = {
-            checkoutStrategy: Checkout.STRATEGY.FORCE,
-            paths: "package.json"
-          };
-          return Checkout.head(test.repository, opts);
-        })
-        .then(function() {
-          garbageCollect();
-
-          return Registry.unregister(filterName);
-        })
-        .then(function(result) {
-          assert.strictEqual(result, NodeGit.Error.CODE.OK);
-          assert.strictEqual(shutdown, true);
-        });
-    });
-
-    it("shutdown completes even if there is an error", function() {
-      var test = this;
-      var shutdown = false;
-      return Registry.register(filterName, {
-        apply: function() {},
-        check: function(){
-          return NodeGit.Error.CODE.PASSTHROUGH;
-        },
-        shutdown: function(){
-          shutdown = true;
-          throw new Error("I failed");
-        }
-      }, 0)
-        .then(function(result) {
-          assert.strictEqual(result, NodeGit.Error.CODE.OK);
-          return fse.writeFile(
-            packageJsonPath,
-            "Changing content to trigger checkout",
-            { encoding: "utf-8" }
-          );
-        })
-        .then(function() {
-          var opts = {
-            checkoutStrategy: Checkout.STRATEGY.FORCE,
-            paths: "package.json"
-          };
-          return Checkout.head(test.repository, opts);
-        })
-        .then(function() {
-          return Registry.unregister(filterName);
-        })
-        .then(function(result) {
-          assert.strictEqual(result, NodeGit.Error.CODE.OK);
-          assert.strictEqual(shutdown, true);
-        })
-        .catch(function(error) {
-          assert.fail(error, null, "The operation should not have failed");
-        });
-    });
-  });
-
   describe("Apply", function() {
     before(function() {
       var test = this;
@@ -406,7 +183,7 @@ describe("Filter", function() {
 
     var message = "some new fancy filter";
     var length = message.length;
-    var tempBuffer = new Buffer(message, "utf-8");
+    var tempBuffer = Buffer.from(message, "utf-8");
     var largeBufferSize = 500000000;
 
     it("should not apply when check returns GIT_PASSTHROUGH", function(){
@@ -443,7 +220,7 @@ describe("Filter", function() {
 
     it("should apply filter when check succeeds", function() {
       var test = this;
-      var applied = true;
+      var applied = false;
 
       return Registry.register(filterName, {
         apply: function() {
@@ -553,6 +330,82 @@ describe("Filter", function() {
           );
 
           assert.strictEqual(postInitializeReadmeContents, message);
+        });
+    });
+
+    it("can run sync callback on checkout without deadlocking", function() { // jshint ignore:line
+      var test = this;
+      var syncCallbackResult = 1;
+
+      return Registry.register(filterName, {
+        apply: function() {
+          syncCallbackResult = test.repository.isEmpty();
+        },
+        check: function() {
+          return NodeGit.Error.CODE.OK;
+        }
+      }, 0)
+        .then(function(result) {
+          assert.strictEqual(result, NodeGit.Error.CODE.OK);
+          return fse.writeFile(
+            packageJsonPath,
+            "Changing content to trigger checkout",
+            { encoding: "utf-8" }
+          );
+        })
+        .then(function() {
+          var opts = {
+            checkoutStrategy: Checkout.STRATEGY.FORCE,
+            paths: "package.json"
+          };
+          return Checkout.head(test.repository, opts);
+        })
+        .then(function() {
+          assert.strictEqual(syncCallbackResult, 0);
+        });
+    });
+
+    // Temporary workaround for LFS checkout. Test skipped.
+    // To activate when reverting workaround.
+    // 'Checkout.head' and 'Submodule.lookup' do work with the repo locked.
+    // They should work together without deadlocking.
+    it.skip("can run async callback on checkout without deadlocking", function() { // jshint ignore:line
+      var test = this;
+      var submoduleNameIn = "vendor/libgit2";
+      var asyncCallbackResult = "";
+
+      return Registry.register(filterName, {
+        apply: function() {
+          return NodeGit.Submodule.lookup(test.repository, submoduleNameIn)
+            .then(function(submodule) {
+              return submodule.name();
+            })
+            .then(function(name) {
+              asyncCallbackResult = name;
+              return NodeGit.Error.CODE.OK;
+            });
+        },
+        check: function() {
+          return NodeGit.Error.CODE.OK;
+        }
+      }, 0)
+        .then(function(result) {
+          assert.strictEqual(result, NodeGit.Error.CODE.OK);
+          return fse.writeFile(
+            packageJsonPath,
+            "Changing content to trigger checkout",
+            { encoding: "utf-8" }
+          );
+        })
+        .then(function() {
+          var opts = {
+            checkoutStrategy: Checkout.STRATEGY.FORCE,
+            paths: "package.json"
+          };
+          return Checkout.head(test.repository, opts);
+        })
+        .then(function() {
+          assert.equal(asyncCallbackResult, submoduleNameIn);
         });
     });
 
@@ -668,8 +521,7 @@ describe("Filter", function() {
         check: function(src, attr) {
           return src.path() === "README.md" ?
             0 : NodeGit.Error.CODE.PASSTHROUGH;
-        },
-        cleanup: function() {}
+        }
       }, 0)
         .then(function(result) {
           assert.strictEqual(result, NodeGit.Error.CODE.OK);
@@ -723,8 +575,7 @@ describe("Filter", function() {
         check: function(src, attr) {
           return src.path() === "README.md" ?
             0 : NodeGit.Error.CODE.PASSTHROUGH;
-        },
-        cleanup: function() {}
+        }
       }, 0)
         .then(function(result) {
           garbageCollect();
@@ -771,152 +622,6 @@ describe("Filter", function() {
     });
   });
 
-  describe("Cleanup", function() {
-    it("is called successfully", function() {
-      var test = this;
-      var cleaned = false;
-      return Registry.register(filterName, {
-        initialize: function() {
-          return NodeGit.Error.CODE.OK;
-        },
-        apply: function() {
-          return NodeGit.Error.CODE.OK;
-        },
-        check: function() {
-          return NodeGit.Error.CODE.OK;
-        },
-        cleanup: function() {
-          cleaned = true;
-        }
-      }, 0)
-      .then(function(result) {
-        assert.strictEqual(result, NodeGit.Error.CODE.OK);
-      })
-      .then(function() {
-        var packageContent = fse.readFileSync(
-          packageJsonPath,
-          "utf-8"
-        );
-        assert.notEqual(packageContent, "");
-
-        return fse.writeFile(
-          packageJsonPath,
-          "Changing content to trigger checkout",
-          { encoding: "utf-8" }
-        );
-      })
-      .then(function() {
-        var opts = {
-          checkoutStrategy: Checkout.STRATEGY.FORCE,
-          paths: "package.json"
-        };
-        return Checkout.head(test.repository, opts);
-      })
-      .then(function() {
-        assert.strictEqual(cleaned, true);
-      });
-    });
-
-    it("is called successfully with gc", function() {
-      var test = this;
-      var cleaned = false;
-      return Registry.register(filterName, {
-        initialize: function() {
-          return NodeGit.Error.CODE.OK;
-        },
-        apply: function() {
-          return NodeGit.Error.CODE.OK;
-        },
-        check: function() {
-          return NodeGit.Error.CODE.OK;
-        },
-        cleanup: function() {
-          cleaned = true;
-        }
-      }, 0)
-      .then(function(result) {
-        assert.strictEqual(result, NodeGit.Error.CODE.OK);
-      })
-      .then(function() {
-        var packageContent = fse.readFileSync(
-          packageJsonPath,
-          "utf-8"
-        );
-        assert.notEqual(packageContent, "");
-
-        garbageCollect();
-        return fse.writeFile(
-          packageJsonPath,
-          "Changing content to trigger checkout",
-          { encoding: "utf-8" }
-        );
-      })
-      .then(function() {
-        var opts = {
-          checkoutStrategy: Checkout.STRATEGY.FORCE,
-          paths: "package.json"
-        };
-        return Checkout.head(test.repository, opts);
-      })
-      .then(function() {
-        assert.strictEqual(cleaned, true);
-      });
-    });
-
-    it("is not called when check returns GIT_PASSTHROUGH", function() {
-      var test = this;
-      var cleaned = false;
-
-      return Registry.register(filterName, {
-        initialize: function() {
-          return NodeGit.Error.CODE.OK;
-        },
-        apply: function() {
-          return NodeGit.Error.CODE.OK;
-        },
-        check: function() {
-          return NodeGit.Error.CODE.PASSTHROUGH;
-        },
-        cleanup: function() {
-          cleaned = true;
-        }
-      }, 0)
-      .then(function(result) {
-        assert.strictEqual(result, NodeGit.Error.CODE.OK);
-      })
-      .then(function() {
-        var packageContent = fse.readFileSync(
-          packageJsonPath,
-          "utf-8"
-        );
-        var readmeContent = fse.readFileSync(
-          readmePath,
-          "utf-8"
-        );
-
-        assert.notEqual(packageContent, "");
-        assert.notEqual(readmeContent, "Initialized");
-      })
-      .then(function() {
-        return fse.writeFile(
-          packageJsonPath,
-          "Changing content to trigger checkout",
-          { encoding: "utf-8" }
-        );
-      })
-      .then(function() {
-        var opts = {
-          checkoutStrategy: Checkout.STRATEGY.FORCE,
-          paths: "README.md"
-        };
-        return Checkout.head(test.repository, opts);
-      })
-      .then(function() {
-        assert.notStrictEqual(cleaned, true);
-      });
-    });
-  });
-
   describe("Manually Apply", function() {
     beforeEach(function() {
       var test = this;
@@ -938,11 +643,10 @@ describe("Filter", function() {
 
     var message = "This is the filtered content, friends";
     var length = message.length;
-    var tempBuffer = new Buffer(message, "utf-8");
+    var tempBuffer = Buffer.from(message, "utf-8");
 
     it("applies the filters for a path on demand", function() {
       var test = this;
-      var list;
 
       return Registry.register(filterName, {
         apply: function(to, from, source) {
@@ -972,8 +676,7 @@ describe("Filter", function() {
             NodeGit.Filter.FLAG.DEFAULT
           );
         })
-        .then(function(_list) {
-          list = _list;
+        .then(function(list) {
           return list.applyToFile(test.repository, "README.md");
         })
         .then(function(content) {
@@ -983,7 +686,6 @@ describe("Filter", function() {
 
     it("applies the filters to a buffer on demand", function() {
       var test = this;
-      var list;
 
       return Registry.register(filterName, {
         apply: function(to, from, source) {
@@ -1013,8 +715,7 @@ describe("Filter", function() {
             NodeGit.Filter.FLAG.DEFAULT
           );
         })
-        .then(function(_list) {
-          list = _list;
+        .then(function(list) {
           /* jshint ignore:start */
           return list.applyToData(new String("garbo garbo garbo garbo"));
           /* jshint ignore:end */
@@ -1075,6 +776,7 @@ describe("Filter", function() {
         })
         .then(function(content) {
           assert.equal(content, message);
+          list = null;
         });
     });
   });

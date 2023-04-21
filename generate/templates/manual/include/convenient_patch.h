@@ -5,6 +5,8 @@
 #include <string>
 
 #include "async_baton.h"
+#include "async_worker.h"
+#include "lock_master.h"
 #include "promise_completion.h"
 
 extern "C" {
@@ -37,8 +39,12 @@ using namespace v8;
 
 class ConvenientPatch : public Nan::ObjectWrap {
   public:
-    static Nan::Persistent<Function> constructor_template;
-    static void InitializeComponent (v8::Local<v8::Object> target);
+    ConvenientPatch(const ConvenientPatch &) = delete;
+    ConvenientPatch(ConvenientPatch &&) = delete;
+    ConvenientPatch &operator=(const ConvenientPatch &) = delete;
+    ConvenientPatch &operator=(ConvenientPatch &&) = delete;
+
+    static void InitializeComponent(v8::Local<v8::Object> target, nodegit::Context *nodegitContext);
 
     static v8::Local<v8::Value> New(void *raw);
 
@@ -48,6 +54,9 @@ class ConvenientPatch : public Nan::ObjectWrap {
     git_diff_file GetNewFile();
     size_t GetNumHunks();
     PatchData *GetValue();
+
+    void Reference();
+    void Unreference();
 
   private:
     ConvenientPatch(PatchData *raw);
@@ -67,16 +76,22 @@ class ConvenientPatch : public Nan::ObjectWrap {
       PatchData *patch;
       std::vector<HunkData *> *hunks;
     };
-    class HunksWorker : public Nan::AsyncWorker {
+    class HunksWorker : public nodegit::AsyncWorker {
       public:
         HunksWorker(
             HunksBaton *_baton,
             Nan::Callback *callback
-        ) : Nan::AsyncWorker(callback)
+        ) : nodegit::AsyncWorker(callback, "nodegit:AsyncWorker:ConvenientPatch:Hunks")
           , baton(_baton) {};
-        ~HunksWorker() {};
+        HunksWorker(const HunksWorker &) = delete;
+        HunksWorker(HunksWorker &&) = delete;
+        HunksWorker &operator=(const HunksWorker &) = delete;
+        HunksWorker &operator=(HunksWorker &&) = delete;
+        ~HunksWorker(){};
         void Execute();
+        void HandleErrorCallback();
         void HandleOKCallback();
+        nodegit::LockMaster AcquireLocks();
 
       private:
         HunksBaton *baton;

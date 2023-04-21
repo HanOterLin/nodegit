@@ -1,8 +1,14 @@
 class {{ cppClassName }};
+{% if type == 'struct' %}
+class Configurable{{ cppClassName }};
+{% endif %}
 
 struct {{ cppClassName }}Traits {
   typedef {{ cppClassName }} cppClass;
   typedef {{ cType }} cType;
+  {% if type == 'struct' %}
+  typedef Configurable{{ cppClassName }} configurableCppClass;
+  {% endif %}
 
   static const bool isDuplicable = {{ dupFunction|toBool |or cpyFunction|toBool}};
   static void duplicate({{ cType }} **dest, {{ cType }} *src) {
@@ -17,6 +23,7 @@ struct {{ cppClassName }}Traits {
   {% endif %}
   }
 
+  static std::string className() { return "{{ cppClassName }}"; };
   static const bool isSingleton = {{ isSingleton | toBool }};
   static const bool isFreeable = {{ freeFunctionName | toBool}};
   static void free({{ cType }} *raw) {

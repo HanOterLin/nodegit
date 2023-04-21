@@ -83,6 +83,11 @@ public:
     }
   }
 
+  RefreshedRefModel(const RefreshedRefModel &) = delete;
+  RefreshedRefModel(RefreshedRefModel &&) = delete;
+  RefreshedRefModel &operator=(const RefreshedRefModel &) = delete;
+  RefreshedRefModel &operator=(RefreshedRefModel &&) = delete;
+
   static int fromReference(RefreshedRefModel **out, git_reference *ref, git_odb *odb) {
     RefreshedRefModel *refModel = new RefreshedRefModel(ref);
     const git_oid *referencedTargetOid = git_reference_target(ref);
@@ -97,7 +102,8 @@ public:
 
     git_tag *referencedTag;
     if (git_tag_lookup(&referencedTag, repo, referencedTargetOid) == GIT_OK) {
-      refModel->message = strdup(git_tag_message(referencedTag));
+      const char *tagMessage = git_tag_message(referencedTag);
+      refModel->message = tagMessage ? strdup(tagMessage) : NULL;
 
       git_odb_object *tagOdbObject;
       if (git_odb_read(&tagOdbObject, odb, git_tag_id(referencedTag)) == GIT_OK) {
@@ -261,6 +267,11 @@ public:
     ahead(0),
     behind(0) {}
 
+  UpstreamModel(const UpstreamModel &) = delete;
+  UpstreamModel(UpstreamModel &&) = delete;
+  UpstreamModel &operator=(const UpstreamModel &) = delete;
+  UpstreamModel &operator=(UpstreamModel &&) = delete;
+
   static bool fromReference(UpstreamModel **out, git_reference *ref) {
     if (!git_reference_is_branch(ref)) {
       return false;
@@ -350,6 +361,11 @@ public:
     cherrypick(NULL),
     merge(NULL) {}
 
+  RefreshReferencesData(const RefreshReferencesData &) = delete;
+  RefreshReferencesData(RefreshReferencesData &&) = delete;
+  RefreshReferencesData &operator=(const RefreshReferencesData &) = delete;
+  RefreshReferencesData &operator=(RefreshReferencesData &&) = delete;
+
   ~RefreshReferencesData() {
     while(refs.size()) {
       delete refs.back();
@@ -391,30 +407,36 @@ NAN_METHOD(GitRepository::RefreshReferences)
     signatureType = Nan::New("gpgsig").ToLocalChecked();
   }
 
-  if (info.Length() == 0 || (info.Length() == 1 && !info[0]->IsFunction()) || (info.Length() == 2 && !info[1]->IsFunction())) {
+  if (!info[info.Length() - 1]->IsFunction()) {
     return Nan::ThrowError("Callback is required and must be a Function.");
   }
 
-  RefreshReferencesBaton* baton = new RefreshReferencesBaton;
+  RefreshReferencesBaton* baton = new RefreshReferencesBaton();
 
   baton->error_code = GIT_OK;
   baton->error = NULL;
-  baton->out = (void *)new RefreshReferencesData;
+  baton->out = (void *)new RefreshReferencesData();
   baton->repo = Nan::ObjectWrap::Unwrap<GitRepository>(info.This())->GetValue();
 
-  Nan::Callback *callback = new Nan::Callback(Local<Function>::Cast(info[0]));
-  RefreshReferencesWorker *worker = new RefreshReferencesWorker(baton, callback);
-  worker->SaveToPersistent("repo", info.This());
-  worker->SaveToPersistent("signatureType", signatureType);
-  Nan::AsyncQueueWorker(worker);
+  Nan::Callback *callback = new Nan::Callback(Local<Function>::Cast(info[info.Length() - 1]));
+  std::map<std::string, std::shared_ptr<nodegit::CleanupHandle>> cleanupHandles;
+  RefreshReferencesWorker *worker = new RefreshReferencesWorker(baton, callback, cleanupHandles);
+  worker->Reference<GitRepository>("repo", info.This());
+  worker->Reference("signatureType", signatureType);
+  nodegit::Context *nodegitContext = reinterpret_cast<nodegit::Context *>(info.Data().As<External>()->Value());
+  nodegitContext->QueueWorker(worker);
   return;
+}
+
+nodegit::LockMaster GitRepository::RefreshReferencesWorker::AcquireLocks() {
+  nodegit::LockMaster lockMaster(true, baton->repo);
+  return lockMaster;
 }
 
 void GitRepository::RefreshReferencesWorker::Execute()
 {
   giterr_clear();
 
-  LockMaster lockMaster(true, baton->repo);
   git_repository *repo = baton->repo;
   RefreshReferencesData *refreshData = (RefreshReferencesData *)baton->out;
   git_odb *odb;
@@ -583,12 +605,27 @@ void GitRepository::RefreshReferencesWorker::Execute()
   }
 }
 
+void GitRepository::RefreshReferencesWorker::HandleErrorCallback() {
+  if (baton->error) {
+    if (baton->error->message) {
+      free((void *)baton->error->message);
+    }
+
+    free((void *)baton->error);
+  }
+
+  RefreshReferencesData *refreshData = (RefreshReferencesData *)baton->out;
+  delete refreshData;
+
+  delete baton;
+}
+
 void GitRepository::RefreshReferencesWorker::HandleOKCallback()
 {
   if (baton->out != NULL)
   {
     RefreshedRefModel::ensureSignatureRegexes();
-    RefreshReferencesData *refreshData = (RefreshReferencesData *)baton->out;
+    auto refreshData = (RefreshReferencesData *)baton->out;
     v8::Local<v8::Object> result = Nan::New<Object>();
 
     Nan::Set(
@@ -670,4 +707,6 @@ void GitRepository::RefreshReferencesWorker::HandleOKCallback()
   {
     callback->Call(0, NULL, async_resource);
   }
+
+  delete baton;
 }

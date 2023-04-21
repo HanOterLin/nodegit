@@ -23,13 +23,13 @@ NAN_METHOD(GitLibgit2::Opts)
       to = Nan::New<Number>(option_value);
       break;
     }
-    // GET bool
-    case GIT_OPT_GET_WINDOWS_LONGPATHS: {
+    // GET int
+    case GIT_OPT_GET_OWNER_VALIDATION: {
       int option_value;
       if (git_libgit2_opts(from_option, &option_value)) {
         return Nan::ThrowError("git_libgit2_opts failed");
       }
-      to = option_value ? Nan::True() : Nan::False();
+      to = Nan::New<Number>(option_value);
       break;
     }
     // GET unsigned long
@@ -84,26 +84,12 @@ NAN_METHOD(GitLibgit2::Opts)
     case GIT_OPT_ENABLE_FSYNC_GITDIR:
     case GIT_OPT_ENABLE_STRICT_HASH_VERIFICATION:
     case GIT_OPT_ENABLE_UNSAVED_INDEX_SAFETY:
-    case GIT_OPT_DISABLE_PACK_KEEP_FILE_CHECKS: {
+    case GIT_OPT_DISABLE_PACK_KEEP_FILE_CHECKS:
+    case GIT_OPT_SET_OWNER_VALIDATION: {
       if (info.Length() < 2 || !info[1]->IsNumber()) {
         return Nan::ThrowError("Number option is required.");
       }
       const int option_arg = (int)info[1].As<v8::Number>()->Value();
-      if (git_libgit2_opts(from_option, option_arg)) {
-        return Nan::ThrowError("git_libgit2_opts failed");
-      }
-      break;
-    }
-    // SET bool
-    case GIT_OPT_SET_WINDOWS_LONGPATHS: {
-      int option_arg;
-      if (info.Length() < 2) {
-        option_arg = 0;
-      } else {
-        const Nan::Maybe<bool> maybeIsTruthy = Nan::To<bool>(info[1]);
-        const bool isTruthy = maybeIsTruthy.IsJust() && maybeIsTruthy.FromJust();
-        option_arg = isTruthy ? 1 : 0;
-      }
       if (git_libgit2_opts(from_option, option_arg)) {
         return Nan::ThrowError("git_libgit2_opts failed");
       }

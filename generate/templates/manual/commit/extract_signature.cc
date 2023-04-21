@@ -8,21 +8,15 @@ NAN_METHOD(GitCommit::ExtractSignature)
     return Nan::ThrowError("Oid commit_id is required.");
   }
 
-  if (info.Length() == 2 || (info.Length() == 3 && !info[2]->IsFunction())) {
+  if (info.Length() >= 4 && !info[2]->IsString() && !info[2]->IsUndefined() && !info[2]->IsNull()) {
+    return Nan::ThrowError("String signature_field must be a string or undefined/null.");
+  }
+
+  if (!info[info.Length() - 1]->IsFunction()) {
     return Nan::ThrowError("Callback is required and must be a Function.");
   }
 
-  if (info.Length() >= 4) {
-    if (!info[2]->IsString() && !info[2]->IsUndefined() && !info[2]->IsNull()) {
-      return Nan::ThrowError("String signature_field must be a string or undefined/null.");
-    }
-
-    if (!info[3]->IsFunction()) {
-      return Nan::ThrowError("Callback is required and must be a Function.");
-    }
-  }
-
-  ExtractSignatureBaton* baton = new ExtractSignatureBaton;
+  ExtractSignatureBaton* baton = new ExtractSignatureBaton();
 
   baton->error_code = GIT_OK;
   baton->error = NULL;
@@ -57,42 +51,54 @@ NAN_METHOD(GitCommit::ExtractSignature)
     baton->field = NULL;
   }
 
-  Nan::Callback *callback;
-  if (info[2]->IsFunction()) {
-    callback = new Nan::Callback(Local<Function>::Cast(info[2]));
-  } else {
-    callback = new Nan::Callback(Local<Function>::Cast(info[3]));
-  }
+  Nan::Callback *callback = new Nan::Callback(Local<Function>::Cast(info[info.Length() - 1]));
 
-  ExtractSignatureWorker *worker = new ExtractSignatureWorker(baton, callback);
-  worker->SaveToPersistent("repo", Nan::To<v8::Object>(info[0]).ToLocalChecked());
-  worker->SaveToPersistent("commit_id", Nan::To<v8::Object>(info[1]).ToLocalChecked());
-  Nan::AsyncQueueWorker(worker);
+  std::map<std::string, std::shared_ptr<nodegit::CleanupHandle>> cleanupHandles;
+  ExtractSignatureWorker *worker = new ExtractSignatureWorker(baton, callback, cleanupHandles);
+  worker->Reference<GitRepository>("repo", info[0]);
+  worker->Reference<GitOid>("commit_id", info[1]);
+  nodegit::Context *nodegitContext = reinterpret_cast<nodegit::Context *>(info.Data().As<External>()->Value());
+  nodegitContext->QueueWorker(worker);
   return;
+}
+
+nodegit::LockMaster GitCommit::ExtractSignatureWorker::AcquireLocks() {
+  nodegit::LockMaster lockMaster(true, baton->repo);
+  return lockMaster;
 }
 
 void GitCommit::ExtractSignatureWorker::Execute()
 {
   git_error_clear();
 
-  {
-    LockMaster lockMaster(
-      /*asyncAction: */true,
-      baton->repo
-    );
+  baton->error_code = git_commit_extract_signature(
+    &baton->signature,
+    &baton->signed_data,
+    baton->repo,
+    baton->commit_id,
+    (const char *)baton->field
+  );
 
-    baton->error_code = git_commit_extract_signature(
-      &baton->signature,
-      &baton->signed_data,
-      baton->repo,
-      baton->commit_id,
-      (const char *)baton->field
-    );
-
-    if (baton->error_code != GIT_OK && git_error_last() != NULL) {
-      baton->error = git_error_dup(git_error_last());
-    }
+  if (baton->error_code != GIT_OK && git_error_last() != NULL) {
+    baton->error = git_error_dup(git_error_last());
   }
+}
+
+void GitCommit::ExtractSignatureWorker::HandleErrorCallback() {
+  if (baton->error) {
+    if (baton->error->message) {
+      free((void *)baton->error->message);
+    }
+
+    free((void *)baton->error);
+  }
+
+  git_buf_dispose(&baton->signature);
+  git_buf_dispose(&baton->signed_data);
+
+  free(baton->field);
+
+  delete baton;
 }
 
 void GitCommit::ExtractSignatureWorker::HandleOKCallback()

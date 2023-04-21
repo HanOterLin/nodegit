@@ -3,6 +3,28 @@ var assert = require("assert");
 var fse = require("fs-extra");
 var local = path.join.bind(path, __dirname);
 var _ = require("lodash");
+const util = require("util");
+const exec = util.promisify(require("child_process").exec);
+
+
+const generatePathWithLength = (base, length) => {
+  let path = `${base}/`;
+  const baseLength = path.length;
+  const remaining = length - baseLength;
+
+  for (let i = 0; i < remaining; ++i) {
+		// add a slash every 240 characters, but not as first or last character
+    if (i % 239 == 0 && i != remaining - 1 && i != 0) {
+      path += "/";
+    } else {
+      path += "a";
+    }
+  }
+
+  assert.ok(path.length === length);
+
+  return path;
+};
 
 describe("Clone", function() {
   var NodeGit = require("../../");
@@ -10,6 +32,7 @@ describe("Clone", function() {
   var Clone = NodeGit.Clone;
 
   var clonePath = local("../repos/clone");
+  var longClonePath = generatePathWithLength(clonePath, 600);
 
   var sshPublicKeyPath = local("../id_rsa.pub");
   var sshPrivateKeyPath = local("../id_rsa");
@@ -20,11 +43,14 @@ describe("Clone", function() {
   this.timeout(30000);
 
   beforeEach(function() {
-    return fse.remove(clonePath).catch(function(err) {
-      console.log(err);
-
-      throw err;
-    });
+    return fse.remove(clonePath)
+      .then(function() {
+        return fse.remove(longClonePath);
+      })
+      .catch(function(err) {
+        console.log(err);
+        throw err;
+      });
   });
 
   it.skip("can clone with http", function() {
@@ -211,6 +237,62 @@ describe("Clone", function() {
     });
   });
 
+  if (process.platform === "win32") {
+    it("can clone with ssh using old agent with sha1 signing support only",
+      async function () {
+      var pageant = local("../../vendor/pageant.exe");
+      var old_pageant = local("../../vendor/pageant_sha1.exe");
+      var privateKey = local("../../vendor/private.ppk");
+      var test = this;
+      var url = "git@github.com:nodegit/test.git";
+      var opts = {
+        fetchOpts: {
+          callbacks: {
+            certificateCheck: () => 0,
+            credentials: function(url, userName) {
+              return NodeGit.Credential.sshKeyFromAgent(userName);
+            }
+          }
+        }
+      };
+
+      try {
+        await exec("taskkill /im pageant.exe /f /t");
+      } catch (e) {
+        try {
+          await exec("taskkill /im pageant_sha1.exe /f /t");
+        } catch(e) {}
+      }
+      try {
+        await exec(`powershell -command "Start-Process ${old_pageant} ${privateKey}`);
+      } catch (e) {
+        try {
+          await exec(`powershell -command "Start-Process ${pageant} ${privateKey}`);
+        } catch (e) {}
+        return assert.fail("Cannot run old pageant");
+      }
+
+      try {
+        const repo = await Clone(url, clonePath, opts);
+        test.repository = repo;
+      } catch(e) {
+        return assert.fail("Clone error: " + e.message);
+      }
+
+      try {
+        await exec("taskkill /im pageant_sha1.exe /f /t");
+      } catch(e) {}
+
+      try {
+        await exec(`powershell -command "Start-Process ${pageant} ${privateKey}`);
+      } catch (e) {
+        return assert.fail("Cannot run pageant");
+      }
+
+      return assert.ok(test.repository instanceof Repository);
+    });
+  }
+
   it("can clone with ssh", function() {
     var test = this;
     var url = "git@github.com:nodegit/test.git";
@@ -219,7 +301,7 @@ describe("Clone", function() {
         callbacks: {
           certificateCheck: () => 0,
           credentials: function(url, userName) {
-            return NodeGit.Cred.sshKeyFromAgent(userName);
+            return NodeGit.Credential.sshKeyFromAgent(userName);
           }
         }
       }
@@ -239,7 +321,7 @@ describe("Clone", function() {
         callbacks: {
           certificateCheck: () => 0,
           credentials: function(url, userName) {
-            return NodeGit.Cred.sshKeyNew(
+            return NodeGit.Credential.sshKeyNew(
               userName,
               sshPublicKeyPath,
               sshPrivateKeyPath,
@@ -263,7 +345,7 @@ describe("Clone", function() {
         callbacks: {
           certificateCheck: () => 0,
           credentials: function(url, userName) {
-            return NodeGit.Cred.sshKeyNew(
+            return NodeGit.Credential.sshKeyNew(
               userName,
               sshEncryptedPublicKeyPath,
               sshEncryptedPrivateKeyPath,
@@ -280,7 +362,9 @@ describe("Clone", function() {
     });
   });
 
-  it("can clone with git", function() {
+  // Since 15 March the unauthenticated git protocol on port 9418 is no longer supported in Github.
+  // https://github.blog/2021-09-01-improving-git-protocol-security-github/
+  it.skip("can clone with git", function() {
     var test = this;
     var url = "git://github.com/nodegit/test.git";
     var opts = {
@@ -320,10 +404,10 @@ describe("Clone", function() {
           credentials: function() {
             if (firstPass) {
               firstPass = false;
-              return NodeGit.Cred.userpassPlaintextNew("fake-token",
+              return NodeGit.Credential.userpassPlaintextNew("fake-token",
                 "x-oauth-basic");
             } else {
-              return NodeGit.Cred.defaultNew();
+              return NodeGit.Credential.defaultNew();
             }
           }
         }

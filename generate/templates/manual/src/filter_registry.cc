@@ -6,11 +6,12 @@ extern "C" {
 }
 
 #include "../include/nodegit.h"
+#include "../include/cleanup_handle.h"
+#include "../include/context.h"
 #include "../include/lock_master.h"
 #include "../include/functions/copy.h"
 #include "../include/filter_registry.h"
 #include "nodegit_wrapper.cc"
-#include "../include/async_libgit2_queue_worker.h"
 
 #include "../include/filter.h"
 
@@ -18,19 +19,19 @@ using namespace std;
 using namespace v8;
 using namespace node;
 
-Nan::Persistent<v8::Object> GitFilterRegistry::persistentHandle;
-
-// #pragma unmanaged
-void GitFilterRegistry::InitializeComponent(v8::Local<v8::Object> target) {
+void GitFilterRegistry::InitializeComponent(v8::Local<v8::Object> target, nodegit::Context *nodegitContext) {
   Nan::HandleScope scope;
 
-  v8::Local<Object> object = Nan::New<Object>();
+  v8::Local<Object> filterRegistry = Nan::New<Object>();
 
-  Nan::SetMethod(object, "register", GitFilterRegister);
-  Nan::SetMethod(object, "unregister", GitFilterUnregister);
+  Local<External> nodegitExternal = Nan::New<External>(nodegitContext);
+  Nan::SetMethod(filterRegistry, "register", GitFilterRegister, nodegitExternal);
+  Nan::SetMethod(filterRegistry, "unregister", GitFilterUnregister, nodegitExternal);
 
-  Nan::Set(target, Nan::New<String>("FilterRegistry").ToLocalChecked(), object);
-  GitFilterRegistry::persistentHandle.Reset(object);
+  Nan::Set(target, Nan::New<String>("FilterRegistry").ToLocalChecked(), filterRegistry);
+  nodegitContext->SaveToPersistent("FilterRegistry", filterRegistry);
+  std::shared_ptr<nodegit::FilterRegistryCleanupHandles> filterRegistryCleanupHandles(new nodegit::FilterRegistryCleanupHandles);
+  nodegitContext->SaveCleanupHandle("filterRegistry", filterRegistryCleanupHandles);
 }
 
 NAN_METHOD(GitFilterRegistry::GitFilterRegister) {
@@ -52,9 +53,22 @@ NAN_METHOD(GitFilterRegistry::GitFilterRegister) {
     return Nan::ThrowError("Callback is required and must be a Function.");
   }
 
-  FilterRegisterBaton *baton = new FilterRegisterBaton;
+  FilterRegisterBaton *baton = new FilterRegisterBaton();
+  nodegit::Context *nodegitContext = reinterpret_cast<nodegit::Context *>(info.Data().As<External>()->Value());
+  std::map<std::string, std::shared_ptr<nodegit::CleanupHandle>> cleanupHandles;
 
-  baton->filter = Nan::ObjectWrap::Unwrap<GitFilter>(Nan::To<v8::Object>(info[1]).ToLocalChecked())->GetValue();
+  {
+    auto conversionResult = ConfigurableGitFilter::fromJavascript(nodegitContext, info[1]);
+    if (!conversionResult.result) {
+      delete baton;
+      return Nan::ThrowError(Nan::New(conversionResult.error).ToLocalChecked());
+    }
+
+    auto convertedObject = conversionResult.result;
+    cleanupHandles["filter"] = convertedObject;
+    baton->filter = convertedObject->GetValue();
+  }
+
   Nan::Utf8String name(Nan::To<v8::String>(info[0]).ToLocalChecked());
 
   baton->filter_name = (char *)malloc(name.length() + 1);
@@ -64,23 +78,24 @@ NAN_METHOD(GitFilterRegistry::GitFilterRegister) {
   baton->error_code = GIT_OK;
   baton->filter_priority = Nan::To<int>(info[2]).FromJust();
 
-  Nan::Set(Nan::New(GitFilterRegistry::persistentHandle), Nan::To<v8::String>(info[0]).ToLocalChecked(), Nan::To<v8::Object>(info[1]).ToLocalChecked());
-
   Nan::Callback *callback = new Nan::Callback(Local<Function>::Cast(info[3]));
-  RegisterWorker *worker = new RegisterWorker(baton, callback);
+  RegisterWorker *worker = new RegisterWorker(baton, callback, cleanupHandles);
 
-  worker->SaveToPersistent("filter_name", Nan::To<v8::Object>(info[0]).ToLocalChecked());
-  worker->SaveToPersistent("filter_priority", Nan::To<v8::Object>(info[2]).ToLocalChecked());
+  worker->Reference("filter_name", info[0]);
+  worker->Reference("filter_priority", info[2]);
 
-  AsyncLibgit2QueueWorker(worker);
+  nodegitContext->QueueWorker(worker);
   return;
+}
+
+nodegit::LockMaster GitFilterRegistry::RegisterWorker::AcquireLocks() {
+  return nodegit::LockMaster(true, baton->filter_name, baton->filter);
 }
 
 void GitFilterRegistry::RegisterWorker::Execute() {
   git_error_clear();
 
   {
-    LockMaster lockMaster(/*asyncAction: */true, baton->filter_name, baton->filter);
     int result = git_filter_register(baton->filter_name, baton->filter, baton->filter_priority);
     baton->error_code = result;
 
@@ -90,8 +105,23 @@ void GitFilterRegistry::RegisterWorker::Execute() {
   }
 }
 
+void GitFilterRegistry::RegisterWorker::HandleErrorCallback() {
+  if (baton->error) {
+    if (baton->error->message) {
+      free((void *)baton->error->message);
+    }
+
+    free((void *)baton->error);
+  }
+
+  free(baton->filter_name);
+
+  delete baton;
+}
+
 void GitFilterRegistry::RegisterWorker::HandleOKCallback() {
   if (baton->error_code == GIT_OK) {
+    static_pointer_cast<nodegit::FilterRegistryCleanupHandles>(nodegit::Context::GetCurrentContext()->GetCleanupHandle("filterRegistry"))->registeredFilters[baton->filter_name] = cleanupHandles["filter"];
     v8::Local<v8::Value> result = Nan::New(baton->error_code);
     v8::Local<v8::Value> argv[2] = {
       Nan::Null(),
@@ -128,8 +158,10 @@ void GitFilterRegistry::RegisterWorker::HandleOKCallback() {
   else {
     callback->Call(0, NULL, async_resource);
   }
+
+  free(baton->filter_name);
+
   delete baton;
-  return;
 }
 
 NAN_METHOD(GitFilterRegistry::GitFilterUnregister) {
@@ -143,7 +175,7 @@ NAN_METHOD(GitFilterRegistry::GitFilterUnregister) {
     return Nan::ThrowError("Callback is required and must be a Function.");
   }
 
-  FilterUnregisterBaton *baton = new FilterUnregisterBaton;
+  FilterUnregisterBaton *baton = new FilterUnregisterBaton();
   Nan::Utf8String name(Nan::To<v8::String>(info[0]).ToLocalChecked());
 
   baton->filter_name = (char *)malloc(name.length() + 1);
@@ -156,17 +188,19 @@ NAN_METHOD(GitFilterRegistry::GitFilterUnregister) {
   Nan::Callback *callback = new Nan::Callback(Local<Function>::Cast(info[1]));
   UnregisterWorker *worker = new UnregisterWorker(baton, callback);
 
-  worker->SaveToPersistent("filter_name", info[0]);
-
-  AsyncLibgit2QueueWorker(worker);
+  nodegit::Context *nodegitContext = reinterpret_cast<nodegit::Context *>(info.Data().As<External>()->Value());
+  nodegitContext->QueueWorker(worker);
   return;
+}
+
+nodegit::LockMaster GitFilterRegistry::UnregisterWorker::AcquireLocks() {
+  return nodegit::LockMaster(true, baton->filter_name);
 }
 
 void GitFilterRegistry::UnregisterWorker::Execute() {
   git_error_clear();
 
   {
-    LockMaster lockMaster(/*asyncAction: */true, baton->filter_name);
     int result = git_filter_unregister(baton->filter_name);
     baton->error_code = result;
 
@@ -176,8 +210,23 @@ void GitFilterRegistry::UnregisterWorker::Execute() {
   }
 }
 
+void GitFilterRegistry::UnregisterWorker::HandleErrorCallback() {
+  if (baton->error) {
+    if (baton->error->message) {
+      free((void *)baton->error->message);
+    }
+
+    free((void *)baton->error);
+  }
+
+  free(baton->filter_name);
+
+  delete baton;
+}
+
 void GitFilterRegistry::UnregisterWorker::HandleOKCallback() {
   if (baton->error_code == GIT_OK) {
+    static_pointer_cast<nodegit::FilterRegistryCleanupHandles>(nodegit::Context::GetCurrentContext()->GetCleanupHandle("filterRegistry"))->registeredFilters.erase(baton->filter_name);
     v8::Local<v8::Value> result = Nan::New(baton->error_code);
     v8::Local<v8::Value> argv[2] = {
       Nan::Null(),
@@ -214,6 +263,8 @@ void GitFilterRegistry::UnregisterWorker::HandleOKCallback() {
   else {
     callback->Call(0, NULL, async_resource);
   }
+
+  free(baton->filter_name);
+
   delete baton;
-  return;
 }

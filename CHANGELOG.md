@@ -1,5 +1,617 @@
 # Change Log
 
+## <a name="v0-28-0-alpha.21" href="#v0-28-0-alpha-21">v0.28.0-alpha.21</a> [(2023-02-10)](https://github.com/nodegit/nodegit/releases/tag/v0.28.0-alpha.21)
+
+[Full Changelog](https://github.com/nodegit/nodegit/compare/v0.28.0-alpha.20...v0.28.0-alpha.21)
+
+#### Summary of changes
+- Update OpenSSL to 1.1.1t
+- Update got + other packages with security vulnerabilities
+- Fix tag.createWithSignature function definition
+
+#### Merged PRs into NodeGit
+- [Bump OpenSSL to 1.1.1t](https://github.com/nodegit/nodegit/pull/1971)
+- [Update got + other locked package versions](https://github.com/nodegit/nodegit/pull/1969)
+- [Fix tag createWithSignature function](https://github.com/nodegit/nodegit/pull/1945)
+
+## <a name="v0-28-0-alpha.20" href="#v0-28-0-alpha-20">v0.28.0-alpha.20</a> [(2022-11-11)](https://github.com/nodegit/nodegit/releases/tag/v0.28.0-alpha.20)
+
+[Full Changelog](https://github.com/nodegit/nodegit/compare/v0.28.0-alpha.19...v0.28.0-alpha.20)
+
+#### Summary of changes
+- Fix electron build issues
+
+#### Merged PRs into NodeGit
+- [Fix electron build issues](https://github.com/nodegit/nodegit/pull/1955)
+
+## <a name="v0-28-0-alpha.19" href="#v0-28-0-alpha-19">v0.28.0-alpha.19</a> [(2022-11-08)](https://github.com/nodegit/nodegit/releases/tag/v0.28.0-alpha.19)
+
+[Full Changelog](https://github.com/nodegit/nodegit/compare/v0.28.0-alpha.18...v0.28.0-alpha.19)
+
+#### Summary of changes
+- OpenSSL bump
+- OpenSSL binaries will be automatically downloaded when building for Electron on Windows and macOS
+- Crash fix on Electron 18+ due to Nan bug
+- Partial stash support
+
+#### Merged PRs into NodeGit
+- [Allow overriding C++ standard](https://github.com/nodegit/nodegit/pull/1953)
+- [Bump OpenSSL to 1.1.1s](https://github.com/nodegit/nodegit/pull/1952)
+- [Fix intermittent crash on Electron 18+](https://github.com/nodegit/nodegit/pull/1951)
+- [type is a call](https://github.com/nodegit/nodegit/pull/1942)
+- [Fix leak in agent](https://github.com/nodegit/nodegit/pull/1947)
+- [Default to using precompiled OpenSSL for Electron](https://github.com/nodegit/nodegit/pull/1949)
+- [Partial stash support](https://github.com/nodegit/nodegit/pull/1948)
+- [Switch CI to macOS-11](https://github.com/nodegit/nodegit/pull/1950)
+- [Preemptively Patch OpenSSL 1.1.1q](https://github.com/nodegit/nodegit/pull/1928)
+- [Add getAllFilepaths function in tree object](https://github.com/nodegit/nodegit/pull/1919)
+
+## <a name="v0-28-0-alpha.18" href="#v0-28-0-alpha-18">v0.28.0-alpha.18</a> [(2022-05-27)](https://github.com/nodegit/nodegit/releases/tag/v0.28.0-alpha.18)
+
+[Full Changelog](https://github.com/nodegit/nodegit/compare/v0.28.0-alpha.17...v0.28.0-alpha.18)
+
+#### Summary of changes
+- Allow fetching partial patches from diff
+- Fix nanosecond comparison typo
+
+#### Merged PRs into NodeGit
+- [Improve Diff.patches to allow an index array](https://github.com/nodegit/nodegit/pull/1916)
+- [Bring in GIT_USE_NSEC fix](https://github.com/nodegit/nodegit/pull/1917)
+
+## <a name="v0-28-0-alpha.17" href="#v0-28-0-alpha-17">v0.28.0-alpha.17</a> [(2022-05-24)](https://github.com/nodegit/nodegit/releases/tag/v0.28.0-alpha.17)
+
+[Full Changelog](https://github.com/nodegit/nodegit/compare/v0.28.0-alpha.16...v0.28.0-alpha.17)
+
+#### Summary of changes
+- Enable nanosecond precision for file operations
+
+#### Merged PRs into NodeGit
+- [Enable GIT_USE_NSEC](https://github.com/nodegit/nodegit/pull/1912)
+
+## <a name="v0-28-0-alpha.16" href="#v0-28-0-alpha-16">v0.28.0-alpha.16</a> [(2022-05-09)](https://github.com/nodegit/nodegit/releases/tag/v0.28.0-alpha.16)
+
+[Full Changelog](https://github.com/nodegit/nodegit/compare/v0.28.0-alpha.15...v0.28.0-alpha.16)
+
+#### Summary of changes
+- Allow disabling specific filters during checkout
+
+#### Merged PRs into NodeGit
+- [Allow disabling specific filters during checkout](https://github.com/nodegit/nodegit/pull/1911)
+
+## <a name="v0-28-0-alpha.15" href="#v0-28-0-alpha-15">v0.28.0-alpha.15</a> [(2022-05-05)](https://github.com/nodegit/nodegit/releases/tag/v0.28.0-alpha.15)
+
+[Full Changelog](https://github.com/nodegit/nodegit/compare/v0.28.0-alpha.14...v0.28.0-alpha.15)
+
+#### Summary of changes
+- Expose `GIT_OPT_GET_OWNER_VALIDATION` and `GIT_OPT_SET_OWNER_VALIDATION`
+
+#### Merged PRs into NodeGit
+- [Expose get/set owner validation opts](https://github.com/nodegit/nodegit/pull/1910)
+
+## <a name="v0-28-0-alpha.14" href="#v0-28-0-alpha-14">v0.28.0-alpha.14</a> [(2022-05-02)](https://github.com/nodegit/nodegit/releases/tag/v0.28.0-alpha.14)
+
+[Full Changelog](https://github.com/nodegit/nodegit/compare/v0.28.0-alpha.13...v0.28.0-alpha.14)
+
+#### Summary of changes
+- Allow statically linking OpenSSL on Linux
+- Update libgit2 to 1.3.1
+
+#### Merged PRs into NodeGit
+- [Statically compile OpenSSL on linux for electron](https://github.com/nodegit/nodegit/pull/1905)
+- [Upgrade libgit2 to 1.3.1](https://github.com/nodegit/nodegit/pull/1894)
+
+## <a name="v0-28-0-alpha.13" href="#v0-28-0-alpha-13">v0.28.0-alpha.13</a> [(2022-03-22)](https://github.com/nodegit/nodegit/releases/tag/v0.28.0-alpha.13)
+
+[Full Changelog](https://github.com/nodegit/nodegit/compare/v0.28.0-alpha.12...v0.28.0-alpha.13)
+
+#### Summary of changes
+- Partially fix issue with building for Electron
+
+#### Merged PRs into NodeGit
+- [Fix electron build](https://github.com/nodegit/nodegit/pull/1901)
+
+## <a name="v0-28-0-alpha.12" href="#v0-28-0-alpha-12">v0.28.0-alpha.12</a> [(2022-03-18)](https://github.com/nodegit/nodegit/releases/tag/v0.28.0-alpha.12)
+
+[Full Changelog](https://github.com/nodegit/nodegit/compare/v0.28.0-alpha.11...v0.28.0-alpha.12)
+
+#### Summary of changes
+- Updated CI because of GitHub deprecations
+- Added workaround for LFS performance regression
+
+#### Merged PRs into NodeGit
+- [Update windows 2016 CI to 2019](https://github.com/nodegit/nodegit/pull/1897)
+- [Skip "can clone with git" test, unauthenticated git protocol is no longer supported in Github](https://github.com/nodegit/nodegit/pull/1899)
+- [UNSAFE Temporary workaround for LFS checkout performance regression](https://github.com/nodegit/nodegit/pull/1883)
+- [Update Github Actions for node 16](https://github.com/nodegit/nodegit/pull/1896)
+
+## <a name="v0-28-0-alpha.11" href="#v0-28-0-alpha-11">v0.28.0-alpha.11</a> [(2022-02-08)](https://github.com/nodegit/nodegit/releases/tag/v0.28.0-alpha.11)
+
+[Full Changelog](https://github.com/nodegit/nodegit/compare/v0.28.0-alpha.10...v0.28.0-alpha.11)
+
+#### Summary of changes
+- Updated libssh2 to add RSA SHA2 256/512 SSH key support
+
+#### Merged PRs into NodeGit
+- [RSA SHA2 256/512 key upgrade support RFC 8332 #536 (#626)](https://github.com/nodegit/nodegit/pull/1888)
+- [Fix typos in examples](https://github.com/nodegit/nodegit/pull/1884)
+- [Don't build shared OpenSSL libs](https://github.com/nodegit/nodegit/pull/1877)
+
+## <a name="v0-28-0-alpha.10" href="#v0-28-0-alpha-10">v0.28.0-alpha.10</a> [(2021-11-11)](https://github.com/nodegit/nodegit/releases/tag/v0.28.0-alpha.10)
+
+[Full Changelog](https://github.com/nodegit/nodegit/compare/v0.28.0-alpha.9...v0.28.0-alpha.10)
+
+#### Summary of changes
+- Reworked CI due to GitHub dropping Ubuntu 16.04 support
+- When building for Electron on Windows/macOS and prebuilts are unavailable: NodeGit will attempt to build OpenSSL locally by default. This is due to Conan changing their API/provided OpenSSL binaries. There are options for pointing to an installed OpenSSL location or URL for downloading prebuilt binaries, see [Building from source](http://www.nodegit.org/guides/install/from-source/).
+- Updated OpenSSL to 1.1.1l
+- Updated libssh2 to 1.10.0
+- Added `Repo.prototype.statistics` method for calculating repository statistics
+- More progress towards becoming context-aware
+
+#### Merged PRs into NodeGit
+- [Allow download of prebuilt OpenSSL](https://github.com/nodegit/nodegit/pull/1875)
+- [Update libssh2 to 1.10.0](https://github.com/nodegit/nodegit/pull/1874)
+- [Statistics with same output as "git-sizer -j"](https://github.com/nodegit/nodegit/pull/1846)
+- [Fix memory leak on context shutdown](https://github.com/nodegit/nodegit/pull/1856)
+- [Build OpenSSL locally for Electron](https://github.com/nodegit/nodegit/pull/1870)
+- [Fix a reference error when compiling with VC2019](https://github.com/nodegit/nodegit/pull/1859)
+- [Use containers for Linux CI](https://github.com/nodegit/nodegit/pull/1860)
+
+
+## <a name="v0-28-0-alpha.9" href="#v0-28-0-alpha-9">v0.28.0-alpha.9</a> [(2021-06-04)](https://github.com/nodegit/nodegit/releases/tag/v0.28.0-alpha.9)
+
+[Full Changelog](https://github.com/nodegit/nodegit/compare/v0.28.0-alpha.8...v0.28.0-alpha.9)
+
+#### Summary of changes
+- Fixes an issue where rebase.init and rebase.open were ignoring callbacks in some situations
+
+#### Merged PRs into NodeGit
+- [Shallow clone rebase options before modifying #1845](https://github.com/nodegit/nodegit/pull/1845)
+
+
+## <a name="v0-28-0-alpha.8" href="#v0-28-0-alpha-8">v0.28.0-alpha.8</a> [(2021-05-10)](https://github.com/nodegit/nodegit/releases/tag/v0.28.0-alpha.8)
+
+[Full Changelog](https://github.com/nodegit/nodegit/compare/v0.28.0-alpha.7...v0.28.0-alpha.8)
+
+#### Summary of changes
+- Fixes another issue where Kerberos proxy authentication causes network failures
+
+#### Merged PRs into NodeGit
+- [Bump libgit2 to include libgit2#5852 #1844](https://github.com/nodegit/nodegit/pull/1844)
+
+#### Merged PRs into Libgit2
+- [Fix issues with Proxy Authentication after httpclient refactor #5852](https://github.com/libgit2/libgit2/pull/5852)
+
+
+## <a name="v0-28-0-alpha.7" href="#v0-28-0-alpha-7">v0.28.0-alpha.7</a> [(2021-04-30)](https://github.com/nodegit/nodegit/releases/tag/v0.28.0-alpha.7)
+
+[Full Changelog](https://github.com/nodegit/nodegit/compare/v0.28.0-alpha.6...v0.28.0-alpha.7)
+
+#### Summary of changes
+- Fixes issue with where proxy authentication fails on linux/osx with assertion error.
+
+#### Merged PRs into NodeGit
+- [Bump Libgit2 to fix proxy auth on linux / osx #1841](https://github.com/nodegit/nodegit/pull/1841)
+
+#### Merged PRs into Libgit2
+- [https://github.com/libgit2/libgit2/pull/5852](https://github.com/libgit2/libgit2/pull/5852)
+
+
+## <a name="v0-28-0-alpha.6" href="#v0-28-0-alpha-6">v0.28.0-alpha.6</a> [(2021-04-23)](https://github.com/nodegit/nodegit/releases/tag/v0.28.0-alpha.6)
+
+[Full Changelog](https://github.com/nodegit/nodegit/compare/v0.28.0-alpha.5...v0.28.0-alpha.6)
+
+#### Summary of changes
+- Rewrote options normalization such that it is done in C++. Provided deprecated classes for backwards compatibility. These will be removed in a later version of Nodegit.
+- Deprecated construction of these objects, in the future, please pass plain objects with just the fields you wish to override to NodeGit, and the library will take care of the rest.
+  - NodeGit.ApplyOptions
+  - NodeGit.BlameOptions
+  - NodeGit.BlobFilterOptions
+  - NodeGit.CheckoutOptions
+  - NodeGit.CherrypickOptions
+  - NodeGit.CloneOptions
+  - NodeGit.DescribeFormatOptions
+  - NodeGit.DiffFindOptions
+  - NodeGit.FetchOptions
+  - NodeGit.MergeFileInput
+  - NodeGit.MergeFileOptions
+  - NodeGit.MergeOptions
+  - NodeGit.ProxyOptions
+  - NodeGit.PushOptions
+  - NodeGit.RebaseOptions
+  - NodeGit.RemoteCreatOptions
+  - NodeGit.RepositoryInitOptions
+  - NodeGit.RevertOptions
+  - NodeGit.StashApplyOptions
+  - NodeGit.StatusOptions
+  - NodeGit.SubmoduleUpdateOptions
+- Ensured the following functions have their optional arguments labeled/working as optional:
+  - NodeGit.Apply
+  - NodeGit.Checkout.index
+  - NodeGit.Cherrypick
+  - NodeGit.Cherrypick.commit
+  - NodeGit.Merge
+  - NodeGit.PatchBlobs
+  - NodeGit.Rebase.open
+  - NodeGit.Remote.prototype.connect
+  - NodeGit.Remote.prototype.download
+  - NodeGit.Remote.prototype.fetch
+  - NodeGit.Remote.prototype.prune
+  - NodeGit.Remote.prototype.push
+  - NodeGit.Remote.prototype.upload
+  - NodeGit.Stash.apply
+  - NodeGit.Stash.pop
+  - NodeGit.Worktree.isPrunable
+  - NodeGit.Worktree.prune
+- Updated the following functions to be async:
+  - NodeGit.Apply
+  - NodeGit.Remote.prototype.prune
+  - NodeGit.Worktree.isPrunable
+  - NodeGit.Worktree.prune
+- Addressed issue where GitWorktreePruneOptions and GitWorktreeAddOptions were impossible to instantiate, thus making working with worktress possible now.
+- Addressed issue where GitIndexTime was not configurable
+- Addressed issue where the following functions did not return errors from libgit2:
+  - NodeGit.Merge.analysis
+  - NodeGit.Note.commitRemove
+
+#### Merged PRs into NodeGit
+- [Eliminate need for normalize options #1837](https://github.com/nodegit/nodegit/pull/1837)
+- [Define optional arguments for Patch.fromBlobs() #1835](https://github.com/nodegit/nodegit/pull/1835)
+
+
+## <a name="v0-28-0-alpha.5" href="#v0-28-0-alpha-5">v0.28.0-alpha.5</a> [(2021-04-09)](https://github.com/nodegit/nodegit/releases/tag/v0.28.0-alpha.5)
+
+[Full Changelog](https://github.com/nodegit/nodegit/compare/v0.28.0-alpha.4...v0.28.0-alpha.5)
+
+#### Summary of changes
+- Fixes crash in multithreaded checkout in fork of libgit2
+
+#### Merged PRs into NodeGit
+- [Update multithreaded checkout in libgit2 #1834](https://github.com/nodegit/nodegit/pull/1834)
+
+#### Merged PRs into Libgit2
+- [Default to GIT_BRANCH_DEFAULT if init.defaultBranch is empty string](https://github.com/libgit2/libgit2/pull/5832)
+- [Remove duplicate line, in example code](https://github.com/libgit2/libgit2/pull/5821)
+
+
+## <a name="v0-28-0-alpha.4" href="#v0-28-0-alpha-4">v0.28.0-alpha.4</a> [(2021-04-07)](https://github.com/nodegit/nodegit/releases/tag/v0.28.0-alpha.4)
+
+[Full Changelog](https://github.com/nodegit/nodegit/compare/v0.28.0-alpha.3...v0.28.0-alpha.4)
+
+#### Summary of changes
+- Introduces harder safeguards on persistent references to prevent garbage collection during async work
+
+#### Merged PRs into NodeGit
+- [Workaround: Prevent objectwrap from being cleaned up during async work #1833](https://github.com/nodegit/nodegit/pull/1833)
+
+
+## <a name="v0-28-0-alpha.3" href="#v0-28-0-alpha-3">v0.28.0-alpha.3</a> [(2021-04-02)](https://github.com/nodegit/nodegit/releases/tag/v0.28.0-alpha.3)
+
+[Full Changelog](https://github.com/nodegit/nodegit/compare/v0.28.0-alpha.2...v0.28.0-alpha.3)
+
+#### Summary of changes
+- Addresses failure to open repo with empty default branch name
+
+#### Merged PRs into NodeGit
+- [Bring in changes from libgit2 #5832 #1832](https://github.com/nodegit/nodegit/pull/1832)
+
+#### Cherrypicked PRs into Libgit2
+- [Default to GIT_BRANCH_DEFAULT if init.defaultBranch is empty string #5832](https://github.com/libgit2/libgit2/pull/5832)
+
+
+## <a name="v0-28-0-alpha.2" href="#v0-28-0-alpha-2">v0.28.0-alpha.2</a> [(2021-03-31)](https://github.com/nodegit/nodegit/releases/tag/v0.28.0-alpha.2)
+
+[Full Changelog](https://github.com/nodegit/nodegit/compare/v0.28.0-alpha.1...v0.28.0-alpha.2)
+
+#### Summary of changes
+- Addresses crash in mwindow from libgit2
+- Bumps libgit2 to bring in bug fixes
+
+#### Merged PRs into NodeGit
+- [Bump Libgit2 to 1.1.0 (on current head of libgit2) #1831](https://github.com/nodegit/nodegit/pull/1831)
+
+#### Merged PRs into Libgit2
+- [tree: deprecate `git_treebuilder_write_with_buffer`](https://github.com/libgit2/libgit2/pull/5815)
+- [winhttp: skip certificate check if unable to send request](https://github.com/libgit2/libgit2/pull/5814)
+- [commit-graph: Introduce `git_commit_graph_needs_refresh()`](https://github.com/libgit2/libgit2/pull/5764)
+- [commit-graph: Support lookups of entries in a commit-graph](https://github.com/libgit2/libgit2/pull/5763)
+- [merge: Check insert_head_ids error in create_virtual_base](https://github.com/libgit2/libgit2/pull/5818)
+- [Check git_signature_dup failure](https://github.com/libgit2/libgit2/pull/5817)
+- [Fix some typos](https://github.com/libgit2/libgit2/pull/5797)
+- [include: fix typos in comments](https://github.com/libgit2/libgit2/pull/5805)
+- [Fix documentation formating on repository.h](https://github.com/libgit2/libgit2/pull/5806)
+- [index: Check git_vector_dup error in write_entries](https://github.com/libgit2/libgit2/pull/5801)
+- [refdb_fs: Check git_sortedcache wlock/rlock errors](https://github.com/libgit2/libgit2/pull/5800)
+- [Add new bindings for the R language](https://github.com/libgit2/libgit2/pull/5795)
+- [Update .gitignore](https://github.com/libgit2/libgit2/pull/5787)
+- [patch: add owner accessor](https://github.com/libgit2/libgit2/pull/5731)
+- [commit-graph: Introduce a parser for commit-graph files](https://github.com/libgit2/libgit2/pull/5762)
+- [revspec: rename git_revparse_mode_t to git_revspec_t](https://github.com/libgit2/libgit2/pull/5786)
+- [mwindow: Fix a bug in the LRU window finding code](https://github.com/libgit2/libgit2/pull/5783)
+- [ci: don't use ninja on macOS](https://github.com/libgit2/libgit2/pull/5780)
+- [midx: Fix a bug in `git_midx_needs_refresh()`](https://github.com/libgit2/libgit2/pull/5768)
+- [clone: set refs/remotes/origin/HEAD when branch is specified](https://github.com/libgit2/libgit2/pull/5775)
+- [Use `p_pwrite`/`p_pread` consistently throughout the codebase](https://github.com/libgit2/libgit2/pull/5769)
+- [README: instructions for using libgit2 without compiling](https://github.com/libgit2/libgit2/pull/5772)
+- [Cope with empty default branch](https://github.com/libgit2/libgit2/pull/5770)
+- [github-actions: Also rename the main branch here](https://github.com/libgit2/libgit2/pull/5771)
+- [blob: fix name of `GIT_BLOB_FILTER_ATTRIBUTES_FROM_HEAD`](https://github.com/libgit2/libgit2/pull/5760)
+- [Add documentation for git_blob_filter_options.version](https://github.com/libgit2/libgit2/pull/5759)
+- [Build with NO_MMAP](https://github.com/libgit2/libgit2/pull/5583)
+- [zlib: Add support for building with Chromium's zlib implementation](https://github.com/libgit2/libgit2/pull/5748)
+- [Handle ipv6 addresses](https://github.com/libgit2/libgit2/pull/5741)
+- [Add support for additional SSH hostkey types.](https://github.com/libgit2/libgit2/pull/5750)
+- [Fix the `-DENABLE_WERROR=ON` build for gcc 10.2](https://github.com/libgit2/libgit2/pull/5749)
+- [repository: use intptr_t's in the config map cache](https://github.com/libgit2/libgit2/pull/5746)
+- [Add tests for `git__multiply_int64_overflow`](https://github.com/libgit2/libgit2/pull/5744)
+- [Third attempt to fix the 32-bit version of `git__multiply_int64_overf…](https://github.com/libgit2/libgit2/pull/5743)                                                                                                                     
+- [Avoid using `__builtin_mul_overflow` with the clang+32-bit combo](https://github.com/libgit2/libgit2/pull/5742)                                                                                                                           
+- [ci: run codeql](https://github.com/libgit2/libgit2/pull/5709)                                                                                                                                                                             
+- [pack: continue zlib while we can make progress](https://github.com/libgit2/libgit2/pull/5740)                                                                                                                                             
+- [Re-enable the RC4 test](https://github.com/libgit2/libgit2/pull/4418)                                                                                                                                                                     
+- [Cache the parsed submodule config when diffing](https://github.com/libgit2/libgit2/pull/5727)                                                                                                                                             
+- [Make git__strntol64() ~70%* faster](https://github.com/libgit2/libgit2/pull/5735)                                                                                                                                                         
+- [winhttp: support optional client cert](https://github.com/libgit2/libgit2/pull/5384)                                                                                                                                                      
+- [git.git-authors: Replacing his/her with their](https://github.com/libgit2/libgit2/pull/5724)                                                                                                                                              
+- [Friendlier getting started in the lack of git_libgit2_init](https://github.com/libgit2/libgit2/pull/5578)                                                                                                                                 
+- [Thread-local storage: a generic internal library (with no allocations)](https://github.com/libgit2/libgit2/pull/5720)                                                                                                                     
+- [Thread-free implementation](https://github.com/libgit2/libgit2/pull/5719)                                                                                                                                                                 
+- [Make the pack and mwindow implementations data-race-free](https://github.com/libgit2/libgit2/pull/5593)                                                                                                                                   
+- [Make the odb race-free](https://github.com/libgit2/libgit2/pull/5595)                                                                                                                                                                     
+- [Also add the raw hostkey to `git_cert_hostkey`](https://github.com/libgit2/libgit2/pull/5704)                                                                                                                                             
+- [Fix the `ENABLE_WERROR=ON` build in Groovy Gorilla (gcc 10.2)](https://github.com/libgit2/libgit2/pull/5715)                                                                                                                              
+- [odb: Add git_odb_options](https://github.com/libgit2/libgit2/pull/5447)                                                                                                                                                                   
+- [Introduce GIT_ASSERT macros](https://github.com/libgit2/libgit2/pull/5327)                                                                                                                                                                
+- [ci: only report main branch in README status](https://github.com/libgit2/libgit2/pull/5708)                                                                                                                                               
+- [ci: run coverity in the nightly builds](https://github.com/libgit2/libgit2/pull/5707)
+- [ci: more GitHub Actions](https://github.com/libgit2/libgit2/pull/5706)
+- [Add a ThreadSanitizer build](https://github.com/libgit2/libgit2/pull/5597)
+- [msvc crtdbg -> win32 leakcheck](https://github.com/libgit2/libgit2/pull/5580)
+- [Add missing worktree_dir check and test case](https://github.com/libgit2/libgit2/pull/5692)
+- [Fix the `-DTHREADSAFE=OFF` build](https://github.com/libgit2/libgit2/pull/5690)
+- [ci: propagate environment variables](https://github.com/libgit2/libgit2/pull/5703)
+- [ci: supply a token for self-hosted runners](https://github.com/libgit2/libgit2/pull/5702)
+- [ci: supply a token for self-hosted runners](https://github.com/libgit2/libgit2/pull/5701)
+- [ci: GitHub Actions for arm64](https://github.com/libgit2/libgit2/pull/5700)
+- [ci: stop using deprecated set-env in GitHub Actions](https://github.com/libgit2/libgit2/pull/5697)
+- [Deprecate `is_valid_name` functions; replace with `name_is_valid` functions](https://github.com/libgit2/libgit2/pull/5659)
+- [Include `${MBEDTLS_INCLUDE_DIR}` when compiling `crypt_mbedtls.c`](https://github.com/libgit2/libgit2/pull/5685)
+- [threadstate: rename tlsdata when building w/o threads](https://github.com/libgit2/libgit2/pull/5668)
+- [Refactor "global" state](https://github.com/libgit2/libgit2/pull/5546)
+- [Make the Windows leak detection more robust](https://github.com/libgit2/libgit2/pull/5661)
+- [Define `git___load` when building with `-DTHREADSAFE=OFF`](https://github.com/libgit2/libgit2/pull/5664)
+- [ntlm: update ntlm dependency for htonll](https://github.com/libgit2/libgit2/pull/5658)
+- [libgit2 v1.1.0](https://github.com/libgit2/libgit2/pull/5660)
+- [Update PCRE to 8.44](https://github.com/libgit2/libgit2/pull/5649)
+- [clone: update origin's HEAD](https://github.com/libgit2/libgit2/pull/5651)
+- [Improve the support of atomics](https://github.com/libgit2/libgit2/pull/5594)
+- [Fix error return for invalid extensions.](https://github.com/libgit2/libgit2/pull/5656)
+- [Change bare free to allocator free (fixes #5653)](https://github.com/libgit2/libgit2/pull/5654)
+- [midx: Introduce a parser for multi-pack-index files](https://github.com/libgit2/libgit2/pull/5401)
+- [Fixed typo in comment](https://github.com/libgit2/libgit2/pull/5648)
+- [Fix binary diff showing /dev/null](https://github.com/libgit2/libgit2/pull/5494)
+- [httpclient: only free challenges for current_server type](https://github.com/libgit2/libgit2/pull/5576)
+- [Respect `init.defaultBranch` setting](https://github.com/libgit2/libgit2/pull/5581)
+- [patch_parse: handle absence of "index" header for new/deleted cases](https://github.com/libgit2/libgit2/pull/5620)
+- [boolean config parsing fails in some cases with mapped values](https://github.com/libgit2/libgit2/pull/5626)
+- [Fix config file parsing with multi line values containing quoted parts](https://github.com/libgit2/libgit2/pull/5629)
+- [Fix release build warnings](https://github.com/libgit2/libgit2/pull/5636)
+- [Fix deprecation links inside of documentation not working](https://github.com/libgit2/libgit2/pull/5631)
+- [Fix typo: Make ifndef macroname the same as the define name](https://github.com/libgit2/libgit2/pull/5632)
+- [diff stats: fix segfaults with new files](https://github.com/libgit2/libgit2/pull/5619)
+- [WinHTTP: Try to use TLS1.3](https://github.com/libgit2/libgit2/pull/5633)
+- [Fixed includes for FreeBSD](https://github.com/libgit2/libgit2/pull/5628)
+- [Don't fail if a HTTP server announces he supports a protocol upgrade](https://github.com/libgit2/libgit2/pull/5624)
+- [Return false instead of segfaulting when checking for default port](https://github.com/libgit2/libgit2/pull/5621)
+- [deps: ntlmclient: fix htonll for Haiku](https://github.com/libgit2/libgit2/pull/5612)
+- [azure: Remove job generating documentation](https://github.com/libgit2/libgit2/pull/5615)
+- [Fix crash in git_describe_commit when opts are NULL.](https://github.com/libgit2/libgit2/pull/5617)
+- [Fix `git_mwindow_scan_recently_used` spuriously returning true](https://github.com/libgit2/libgit2/pull/5600)
+- [zstream: handle Z_BUF_ERROR appropriately in get_output_chunk](https://github.com/libgit2/libgit2/pull/5599)
+- [docs: fix typo](https://github.com/libgit2/libgit2/pull/5610)
+
+
+## <a name="v0-28-0-alpha.1" href="#v0-28-0-alpha-1">v0.28.0-alpha.1</a> [(2021-03-12)](https://github.com/nodegit/nodegit/releases/tag/v0.28.0-alpha.1)
+
+[Full Changelog](https://github.com/nodegit/nodegit/compare/v0.27.0...v0.28.0-alpha.1)
+
+#### Summary of changes
+- *Notice* We planned to fix / address Electron 11 compatibility, but ran into some roadblocks. Fix is coming soon, follow [#114](https://github.com/nodegit/nodegit/issues/1774) for details
+- Drops support for Node 10.x.y, < 12.19.x, < 14.10.0
+- Brings in LibGit2 1.0.0
+- NodeGit.Config.prototype.setBool handles truthiness, and NodeGit.Config.prototype.getBool returns true or false
+- Fix GC ownership memory issue
+- Exposes sidebandProgress callback in GitRemoteCallbacks
+- Fixes issue with winhttp and optional client certificates
+- Addresses proxy issue with certification validation in Windows
+- Fix crash in NodeGit.Repository.prototype.refreshReferences
+- Deprecations
+  - NodeGit.Cred is deprecated in favor of NodeGit.Credential
+
+#### Merged PRs into NodeGit
+- [Include libgit2 winhttp proxy fix #1824](https://github.com/nodegit/nodegit/pull/1824)
+- [Return/accept boolean for Config#get/setBool #1827](https://github.com/nodegit/nodegit/pull/1827)
+- [First stab at #1800 (async/await in examples) #1802](https://github.com/nodegit/nodegit/pull/1802)
+- [returns_info: fix ownedByIndices #1823](https://github.com/nodegit/nodegit/pull/1823)
+- [Remove block for sideband_progress in remote_callbacks #1801](https://github.com/nodegit/nodegit/pull/1801)
+- [Use key to grab credential type #1828](https://github.com/nodegit/nodegit/pull/1828)
+- [Don't strdup nullptr from git_tag_message #1822](https://github.com/nodegit/nodegit/pull/1822)
+- [Refactor for context-awareness #1795](https://github.com/nodegit/nodegit/pull/1795)
+- [Update longpath enums to match libgit2 #1797](https://github.com/nodegit/nodegit/pull/1797)
+- [Bump libgit2 to fork of v1.0.0 #1788](https://github.com/nodegit/nodegit/pull/1788)
+
+#### Merged PRs into Libgit2
+- [winhttp: skip certificate check if unable to send request #5814](https://github.com/libgit2/libgit2/pull/5814)
+- [sanitizer ci: skip negotiate tests](https://github.com/libgit2/libgit2/pull/5596)
+- [Add CI support for Memory and UndefinedBehavior Sanitizers](https://github.com/libgit2/libgit2/pull/5569)
+- [Access HEAD via the refdb backends](https://github.com/libgit2/libgit2/pull/5563)
+- [config_entries: Avoid excessive map operations](https://github.com/libgit2/libgit2/pull/5582)
+- [mwindow: set limit on number of open files](https://github.com/libgit2/libgit2/pull/5396)
+- [refdb: a set of preliminary refactorings for the reftable backend](https://github.com/libgit2/libgit2/pull/5570)
+- [CMake modernization pt2](https://github.com/libgit2/libgit2/pull/5547)
+- [Make the tests run cleanly under UndefinedBehaviorSanitizer](https://github.com/libgit2/libgit2/pull/5568)
+- [Make the tests pass cleanly with MemorySanitizer](https://github.com/libgit2/libgit2/pull/5567)
+- [Enable building git2.rc resource script with GCC](https://github.com/libgit2/libgit2/pull/5561)
+- [Make NTLMClient Memory and UndefinedBehavior Sanitizer-clean](https://github.com/libgit2/libgit2/pull/5571)
+- [Random fixes for diff-printing](https://github.com/libgit2/libgit2/pull/5559)
+- [index: Update the documentation for git_index_add_from_buffer()](https://github.com/libgit2/libgit2/pull/5419)
+- [Introduce CI with GitHub Actions](https://github.com/libgit2/libgit2/pull/5550)
+- [Random code cleanups and fixes](https://github.com/libgit2/libgit2/pull/5552)
+- [examples: log: fix documentation generation](https://github.com/libgit2/libgit2/pull/5553)
+- [Missing declarations](https://github.com/libgit2/libgit2/pull/5551)
+- [clar: add tap output option](https://github.com/libgit2/libgit2/pull/5541)
+- [diff::parse: don't include `diff.h`](https://github.com/libgit2/libgit2/pull/5545)
+- [release script: fix typo](https://github.com/libgit2/libgit2/pull/5543)
+- [tests: offer exact name matching with a `$` suffix](https://github.com/libgit2/libgit2/pull/5537)
+- [httpclient: support googlesource](https://github.com/libgit2/libgit2/pull/5536)
+- [git_packbuilder_write: Allow setting path to NULL to use the default path](https://github.com/libgit2/libgit2/pull/5532)
+- [mempack: Use threads when building the pack](https://github.com/libgit2/libgit2/pull/5531)
+- [clar: use internal functions instead of /bin/cp and /bin/rm](https://github.com/libgit2/libgit2/pull/5528)
+- [strarray refactoring](https://github.com/libgit2/libgit2/pull/5535)
+- [CMake cleanups](https://github.com/libgit2/libgit2/pull/5481)
+- [git_pool_init: allow the function to fail](https://github.com/libgit2/libgit2/pull/5526)
+- [diff::workdir: actually test the buffers](https://github.com/libgit2/libgit2/pull/5529)
+- [Handle unreadable configuration files](https://github.com/libgit2/libgit2/pull/5527)
+- [Make git_index_write() generate valid v4 index](https://github.com/libgit2/libgit2/pull/5533)
+- [OpenSSL certificate memory leak](https://github.com/libgit2/libgit2/pull/5522)
+- [tests: checkout: fix flaky test due to mtime race](https://github.com/libgit2/libgit2/pull/5515)
+- [cmake: Sort source files for reproducible builds](https://github.com/libgit2/libgit2/pull/5523)
+- [futils: fix order of declared parameters for `git_futils_fake_symlink`](https://github.com/libgit2/libgit2/pull/5517)
+- [Check the version in package.json](https://github.com/libgit2/libgit2/pull/5516)
+- [tests: merge: fix printf formatter on 32 bit arches](https://github.com/libgit2/libgit2/pull/5513)
+- [Update package.json](https://github.com/libgit2/libgit2/pull/5511)
+- [Introduce GIT_ASSERT macros](https://github.com/libgit2/libgit2/pull/5509)
+- [README.md: Add instructions for building in MinGW environment](https://github.com/libgit2/libgit2/pull/5512)
+- [Fix uninitialized stack memory and NULL ptr dereference in stash_to_index](https://github.com/libgit2/libgit2/pull/5510)
+- [Honor GIT_CHECKOUT_DISABLE_PATHSPEC_MATCH for all checkout types ](https://github.com/libgit2/libgit2/pull/5378)
+- [docs: add documentation for our coding style](https://github.com/libgit2/libgit2/pull/5482)
+- [MSVC: Enable Control Flow Guard (CFG)](https://github.com/libgit2/libgit2/pull/5500)
+- [git__hexdump: better mimic `hexdump -C`](https://github.com/libgit2/libgit2/pull/5431)
+- [Feature: Allow blame to ignore whitespace change](https://github.com/libgit2/libgit2/pull/5383)
+- [deps: ntlmclient: use htobe64 on NetBSD too](https://github.com/libgit2/libgit2/pull/5487)
+- [sysdir: remove unused git_sysdir_get_str](https://github.com/libgit2/libgit2/pull/5485)
+- [Fix typo causing removal of symbol 'git_worktree_prune_init_options'](https://github.com/libgit2/libgit2/pull/5483)
+- [pack: Improve error handling for get_delta_base()](https://github.com/libgit2/libgit2/pull/5425)
+- [repo::open: ensure we can open the repository](https://github.com/libgit2/libgit2/pull/5480)
+- [examples: additions and fixes](https://github.com/libgit2/libgit2/pull/5421)
+- [merge: cache negative cache results for similarity metrics](https://github.com/libgit2/libgit2/pull/5477)
+- [Handle repository format v1](https://github.com/libgit2/libgit2/pull/5388)
+- [CMake: backend selection streamlining](https://github.com/libgit2/libgit2/pull/5440)
+- [refdb_fs: remove unused header file](https://github.com/libgit2/libgit2/pull/5461)
+- [patch: correctly handle mode changes for renames](https://github.com/libgit2/libgit2/pull/5466)
+- [gitignore: clean up patterns from old times](https://github.com/libgit2/libgit2/pull/5474)
+- [README.md: update build matrix to reflect our latest releases](https://github.com/libgit2/libgit2/pull/5478)
+- [Release v1.0](https://github.com/libgit2/libgit2/pull/5471)
+- [refdb_backend: improve callback documentation](https://github.com/libgit2/libgit2/pull/5464)
+- [credentials: provide backcompat for opaque structs](https://github.com/libgit2/libgit2/pull/5465)
+- [Fix segfault when calling git_blame_buffer()](https://github.com/libgit2/libgit2/pull/5445)
+- [Fix spelling error](https://github.com/libgit2/libgit2/pull/5463)
+- [refdb_fs: initialize backend version](https://github.com/libgit2/libgit2/pull/5456)
+- [repository: improve commondir docs](https://github.com/libgit2/libgit2/pull/5444)
+- [cmake: use install directories provided via GNUInstallDirs](https://github.com/libgit2/libgit2/pull/5455)
+- [azure: fix errors due to curl and removal of old VM images](https://github.com/libgit2/libgit2/pull/5451)
+- [win32: don't canonicalize relative paths](https://github.com/libgit2/libgit2/pull/5435)
+- [CMake booleans](https://github.com/libgit2/libgit2/pull/5422)
+- [Set proper pkg-config dependency for pcre2](https://github.com/libgit2/libgit2/pull/5439)
+- [httpclient: use a 16kb read buffer for macOS](https://github.com/libgit2/libgit2/pull/5432)
+- [ci: provide globalsign certs for bionic](https://github.com/libgit2/libgit2/pull/5437)
+- [deps: ntlmclient: fix htonll on big endian FreeBSD](https://github.com/libgit2/libgit2/pull/5426)
+- [azure-pipelines: download GlobalSign's certificate manually](https://github.com/libgit2/libgit2/pull/5433)
+- [deps: ntlmclient: fix missing htonll symbols on FreeBSD and SunOS](https://github.com/libgit2/libgit2/pull/5417)
+- [README: add language binding link to wasm-git](https://github.com/libgit2/libgit2/pull/5420)
+- [Fix #5410: fix installing libgit2.pc in wrong location](https://github.com/libgit2/libgit2/pull/5412)
+- [Fix typo on GIT_USE_NEC](https://github.com/libgit2/libgit2/pull/5413)
+- [tests: diff: verify that we are able to diff with empty subtrees](https://github.com/libgit2/libgit2/pull/5374)
+- [README: update our build matrix to reflect current releases](https://github.com/libgit2/libgit2/pull/5408)
+- [azure: docker: set up HOME variable to fix Coverity builds](https://github.com/libgit2/libgit2/pull/5409)
+- [sha1_lookup: inline its only function into "pack.c"](https://github.com/libgit2/libgit2/pull/5390)
+- [Coverity fixes](https://github.com/libgit2/libgit2/pull/5391)
+- [Release 0.99](https://github.com/libgit2/libgit2/pull/5291)
+- [Release script](https://github.com/libgit2/libgit2/pull/5372)
+- [azure: fix ARM32 builds by replacing gosu(1)](https://github.com/libgit2/libgit2/pull/5406)
+- [openssl: fix Valgrind issues in nightly builds](https://github.com/libgit2/libgit2/pull/5398)
+- [fuzzers: Fix the documentation](https://github.com/libgit2/libgit2/pull/5400)
+- [azure: fix misleading messages printed to stderr being](https://github.com/libgit2/libgit2/pull/5392)
+- [tests: iterator: fix iterator expecting too few items](https://github.com/libgit2/libgit2/pull/5393)
+- [transports: http: fix custom headers not being applied](https://github.com/libgit2/libgit2/pull/5387)
+- [azure: fix Coverity pipeline](https://github.com/libgit2/libgit2/pull/5382)
+- [azure: tests: re-run flaky proxy tests](https://github.com/libgit2/libgit2/pull/5381)
+- [fetchhead: strip credentials from remote URL](https://github.com/libgit2/libgit2/pull/5373)
+- [azure-pipelines: properly expand negotiate passwords](https://github.com/libgit2/libgit2/pull/5375)
+- [cred: change enum to git_credential_t and GIT_CREDENTIAL_*](https://github.com/libgit2/libgit2/pull/5336)
+- [Update link to libgit2 Julia language binding](https://github.com/libgit2/libgit2/pull/5371)
+- [Return int from non-free functions](https://github.com/libgit2/libgit2/pull/5365)
+- [HTTP: Support Apache-based servers with Negotiate](https://github.com/libgit2/libgit2/pull/5286)
+- [internal types: change enums from `type_t` to `_t`](https://github.com/libgit2/libgit2/pull/5364)
+- [merge: Return non-const git_repository from accessor method](https://github.com/libgit2/libgit2/pull/5358)
+- [Do not return free'd git_repository object on error](https://github.com/libgit2/libgit2/pull/5361)
+- [refs: refuse to delete HEAD](https://github.com/libgit2/libgit2/pull/5360)
+- [index: replace map macros with inline functions](https://github.com/libgit2/libgit2/pull/5351)
+- [Make type mismatch errors consistent](https://github.com/libgit2/libgit2/pull/5359)
+- [win32: fix relative symlinks pointing into dirs](https://github.com/libgit2/libgit2/pull/5355)
+- [ntlm: prevent (spurious) compiler warnings](https://github.com/libgit2/libgit2/pull/5354)
+- [Adds support for multiple SSH auth mechanisms being used sequentially](https://github.com/libgit2/libgit2/pull/5305)
+- [netops: handle intact query parameters in service_suffix removal](https://github.com/libgit2/libgit2/pull/5339)
+- [Refactor packfile code to use zstream abstraction](https://github.com/libgit2/libgit2/pull/5340)
+- [Fix git_submodule_sync with relative url](https://github.com/libgit2/libgit2/pull/5322)
+- [http: avoid generating double slashes in url](https://github.com/libgit2/libgit2/pull/5325)
+- [Correct typo in name of referenced parameter](https://github.com/libgit2/libgit2/pull/5348)
+- [patch_parse: fix undefined behaviour due to arithmetic on NULL pointers](https://github.com/libgit2/libgit2/pull/5338)
+- [smart_pkt: fix overflow resulting in OOB read/write of one byte](https://github.com/libgit2/libgit2/pull/5337)
+- [branch: clarify documentation around branches](https://github.com/libgit2/libgit2/pull/5300)
+- [examples: checkout: implement guess heuristic for remote branches](https://github.com/libgit2/libgit2/pull/5283)
+- [Minor doc improvements](https://github.com/libgit2/libgit2/pull/5320)
+- [attr: Update definition of binary macro](https://github.com/libgit2/libgit2/pull/5333)
+- [Security fixes for master](https://github.com/libgit2/libgit2/pull/5331)
+- [release.md: note that we do two security releases](https://github.com/libgit2/libgit2/pull/5318)
+- [MSVC: Fix warning C4133 on x64: "function": Incompatible types - from "unsigned long *" to "size_t *"](https://github.com/libgit2/libgit2/pull/5317)
+- [ci: only push docs from the libgit2/libgit2 repo](https://github.com/libgit2/libgit2/pull/5316)
+- [global: convert to fiber-local storage to fix exit races](https://github.com/libgit2/libgit2/pull/5314)
+- [Fix copy&paste in git_cherrypick_commit docstring](https://github.com/libgit2/libgit2/pull/5315)
+- [patch_parse: fix out-of-bounds reads caused by integer underflow](https://github.com/libgit2/libgit2/pull/5312)
+- [tests: fix compiler warning if tracing is disabled](https://github.com/libgit2/libgit2/pull/5311)
+- [tests: config: only test parsing huge file with GITTEST_INVASIVE_SPEED](https://github.com/libgit2/libgit2/pull/5313)
+- [diff: complete support for git patchid](https://github.com/libgit2/libgit2/pull/5306)
+- [Memory optimizations for config entries](https://github.com/libgit2/libgit2/pull/5243)
+- [ssh: include sha256 host key hash when supported](https://github.com/libgit2/libgit2/pull/5307)
+- [Various examples shape-ups](https://github.com/libgit2/libgit2/pull/5272)
+- [Improve trace support in tests](https://github.com/libgit2/libgit2/pull/5309)
+- [Move `git_off_t` to `git_object_size_t`](https://github.com/libgit2/libgit2/pull/5123)
+- [Add compat typdef for git_attr_t](https://github.com/libgit2/libgit2/pull/5310)
+- [CI Build Updates](https://github.com/libgit2/libgit2/pull/5308)
+- [patch_parse: use paths from "---"/"+++" lines for binary patches](https://github.com/libgit2/libgit2/pull/5303)
+- [Follow 308 redirect in WinHTTP transport](https://github.com/libgit2/libgit2/pull/5285)
+- [fileops: correct error return on p_lstat failures when mkdir](https://github.com/libgit2/libgit2/pull/5302)
+- [config_mem: implement support for snapshots](https://github.com/libgit2/libgit2/pull/5299)
+- [patch_parse: fix segfault when header path contains whitespace only](https://github.com/libgit2/libgit2/pull/5298)
+- [config_file: fix race when creating an iterator](https://github.com/libgit2/libgit2/pull/5282)
+- [Fix crash if snapshotting a config_snapshot](https://github.com/libgit2/libgit2/pull/5293)
+- [fix a bug introduced in 8a23597b](https://github.com/libgit2/libgit2/pull/5295)
+- [reflogs: fix behaviour around reflogs with newlines](https://github.com/libgit2/libgit2/pull/5275)
+- [commit: verify objects exist in git_commit_with_signature](https://github.com/libgit2/libgit2/pull/5289)
+- [patch_parse: fixes for fuzzing errors](https://github.com/libgit2/libgit2/pull/5276)
+- [apply: add GIT_APPLY_CHECK](https://github.com/libgit2/libgit2/pull/5227)
+- [refs: unlock unmodified refs on transaction commit](https://github.com/libgit2/libgit2/pull/5264)
+- [fuzzers: add a new fuzzer for patch parsing](https://github.com/libgit2/libgit2/pull/5269)
+- [patch_parse: handle patches without extended headers](https://github.com/libgit2/libgit2/pull/5273)
+- [Provide a wrapper for simple submodule clone steps](https://github.com/libgit2/libgit2/pull/4637)
+- [macOS GSS Support](https://github.com/libgit2/libgit2/pull/5238)
+- [cmake: correct the link stanza for CoreFoundation](https://github.com/libgit2/libgit2/pull/5265)
+- [Fix file locking on POSIX OS](https://github.com/libgit2/libgit2/pull/5257)
+- [cmake: update minimum CMake version to v3.5.1](https://github.com/libgit2/libgit2/pull/5260)
+- [patch_parse: handle patches with new empty files](https://github.com/libgit2/libgit2/pull/5248)
+- [DRY commit parsing](https://github.com/libgit2/libgit2/pull/4445)
+- [azure: avoid building and testing in Docker as root](https://github.com/libgit2/libgit2/pull/5239)
+- [regexp: implement a new regular expression API](https://github.com/libgit2/libgit2/pull/5226)
+- [git_refdb API fixes](https://github.com/libgit2/libgit2/pull/5106)
+- [Don't use enum for flags](https://github.com/libgit2/libgit2/pull/5242)
+- [valgrind: suppress memory leaks in libssh2_session_handshake](https://github.com/libgit2/libgit2/pull/5240)
+- [buffer: fix writes into out-of-memory buffers](https://github.com/libgit2/libgit2/pull/5232)
+- [cred: add missing private header in GSSAPI block](https://github.com/libgit2/libgit2/pull/5237)
+- [CMake pkg-config modulification](https://github.com/libgit2/libgit2/pull/5206)
+- [Update chat resources in README.md](https://github.com/libgit2/libgit2/pull/5229)
+- [Circular header splitting](https://github.com/libgit2/libgit2/pull/5223)
+
 ## <a name="v0-27-0" href="#v0-27-0">v0.27.0</a> [(2020-07-28)](https://github.com/nodegit/nodegit/releases/tag/v0.27.0)
 
 [Full Changelog](https://github.com/nodegit/nodegit/compare/v0.26.5...v0.27.0)
@@ -12,7 +624,7 @@
 - Prebuilds for Node 14, deprecate Node 8
 - Persist RemoteCallbacks and ProxyOptions on the remote if using Remote.prototype.connect. This fixes a segfault when using any routines on a connected remote.
 
-### #Merged PRs into NodeGit
+####Merged PRs into NodeGit
 - [Upgrade build environments #1785](https://github.com/nodegit/nodegit/pull/1785)
 - [Remote needs to persist the callback/proxyOpts/headers #1784](https://github.com/nodegit/nodegit/pull/1784)
 - [Remove promisify-node and remove old callback api remnants](https://github.com/nodegit/nodegit/pull/1772)
@@ -31,7 +643,7 @@
 - Replace unmaintained request library with got
 - Remove promisify-node and use vanilla promises for all NodeGit promises
 
-### #Merged PRs into NodeGit
+#### Merged PRs into NodeGit
 - [Remove promisify-node and remove old callback api remnants](https://github.com/nodegit/nodegit/pull/1772)
 - [Replace deprecated package request with got](https://github.com/nodegit/nodegit/pull/1771)
 - [Bump OpenSSL prebuilt to 1.1.1c](https://github.com/nodegit/nodegit/pull/1770)

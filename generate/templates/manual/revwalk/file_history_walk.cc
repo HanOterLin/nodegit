@@ -22,6 +22,11 @@ public:
     }
   }
 
+  FileHistoryEvent(const FileHistoryEvent &) = delete;
+  FileHistoryEvent(FileHistoryEvent &&) = delete;
+  FileHistoryEvent &operator=(const FileHistoryEvent &) = delete;
+  FileHistoryEvent &operator=(FileHistoryEvent &&) = delete;
+
   ~FileHistoryEvent() {
     if (commit != NULL) {
       git_commit_free(commit);
@@ -30,7 +35,7 @@ public:
 
   v8::Local<v8::Value> toJavascript() {
     v8::Local<v8::Object> historyEntry = Nan::New<v8::Object>();
-    v8::Local<v8::Array> owners = Nan::New<Array>(1);
+    v8::Local<v8::Array> owners = Nan::New<Array>(0);
     Nan::Set(
       owners,
       Nan::New<v8::Number>(owners->Length()),
@@ -188,11 +193,11 @@ NAN_METHOD(GitRevwalk::FileHistoryWalk)
     return Nan::ThrowError("Max count is required and must be a number.");
   }
 
-  if (info.Length() == 2 || !info[2]->IsFunction()) {
+  if (!info[info.Length() - 1]->IsFunction()) {
     return Nan::ThrowError("Callback is required and must be a Function.");
   }
 
-  FileHistoryWalkBaton* baton = new FileHistoryWalkBaton;
+  FileHistoryWalkBaton* baton = new FileHistoryWalkBaton();
 
   baton->error_code = GIT_OK;
   baton->error = NULL;
@@ -203,12 +208,19 @@ NAN_METHOD(GitRevwalk::FileHistoryWalk)
   baton->out->reserve(baton->max_count);
   baton->walk = Nan::ObjectWrap::Unwrap<GitRevwalk>(info.This())->GetValue();
 
-  Nan::Callback *callback = new Nan::Callback(Local<Function>::Cast(info[2]));
-  FileHistoryWalkWorker *worker = new FileHistoryWalkWorker(baton, callback);
-  worker->SaveToPersistent("fileHistoryWalk", info.This());
+  Nan::Callback *callback = new Nan::Callback(Local<Function>::Cast(info[info.Length() - 1]));
+  std::map<std::string, std::shared_ptr<nodegit::CleanupHandle>> cleanupHandles;
+  FileHistoryWalkWorker *worker = new FileHistoryWalkWorker(baton, callback, cleanupHandles);
+  worker->Reference<GitRevwalk>("fileHistoryWalk", info.This());
 
-  Nan::AsyncQueueWorker(worker);
+  nodegit::Context *nodegitContext = reinterpret_cast<nodegit::Context *>(info.Data().As<External>()->Value());
+  nodegitContext->QueueWorker(worker);
   return;
+}
+
+nodegit::LockMaster GitRevwalk::FileHistoryWalkWorker::AcquireLocks() {
+  nodegit::LockMaster lockMaster(true);
+  return lockMaster;
 }
 
 void GitRevwalk::FileHistoryWalkWorker::Execute()
@@ -418,6 +430,26 @@ void GitRevwalk::FileHistoryWalkWorker::Execute()
   baton->file_path = NULL;
 }
 
+void GitRevwalk::FileHistoryWalkWorker::HandleErrorCallback() {
+  if (baton->error) {
+    if (baton->error->message) {
+      free((void *)baton->error->message);
+    }
+
+    free((void *)baton->error);
+  }
+
+  for (unsigned int i = 0; i < baton->out->size(); ++i) {
+    delete static_cast<FileHistoryEvent *>(baton->out->at(i));
+  }
+
+  delete baton->out;
+
+  free((void *)baton->file_path);
+
+  delete baton;
+}
+
 void GitRevwalk::FileHistoryWalkWorker::HandleOKCallback()
 {
   if (baton->out != NULL) {
@@ -475,4 +507,6 @@ void GitRevwalk::FileHistoryWalkWorker::HandleOKCallback()
   }
 
   callback->Call(0, NULL, async_resource);
+
+  delete baton;
 }

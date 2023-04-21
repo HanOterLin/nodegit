@@ -1,5 +1,7 @@
 template<typename Traits>
-NodeGitWrapper<Traits>::NodeGitWrapper(typename Traits::cType *raw, bool selfFreeing, v8::Local<v8::Object> owner) {
+NodeGitWrapper<Traits>::NodeGitWrapper(typename Traits::cType *raw, bool selfFreeing, v8::Local<v8::Object> owner)
+  : nodegitContext(nodegit::Context::GetCurrentContext()) {
+  nodegitContext->LinkTrackerList(this);
   if (Traits::isSingleton) {
     ReferenceCounter::incrementCountForPointer((void *)raw);
     this->raw = raw;
@@ -19,6 +21,7 @@ NodeGitWrapper<Traits>::NodeGitWrapper(typename Traits::cType *raw, bool selfFre
       Traits::duplicate(&this->raw, raw);
       selfFreeing = true;
     } else {
+      SetNativeOwners(owner);
       this->owner.Reset(owner);
       this->raw = raw;
     }
@@ -35,7 +38,8 @@ NodeGitWrapper<Traits>::NodeGitWrapper(typename Traits::cType *raw, bool selfFre
 }
 
 template<typename Traits>
-NodeGitWrapper<Traits>::NodeGitWrapper(const char *error) {
+NodeGitWrapper<Traits>::NodeGitWrapper(const char *error)
+  : nodegitContext(nodegit::Context::GetCurrentContext()) {
   selfFreeing = false;
   raw = NULL;
   Nan::ThrowError(error);
@@ -43,10 +47,14 @@ NodeGitWrapper<Traits>::NodeGitWrapper(const char *error) {
 
 template<typename Traits>
 NodeGitWrapper<Traits>::~NodeGitWrapper() {
+  Unlink();
   if (Traits::isFreeable && selfFreeing) {
     Traits::free(raw);
     SelfFreeingInstanceCount--;
     raw = NULL;
+  }
+  else if (!selfFreeing) {
+    --NonSelfFreeingConstructedCount;
   }
 }
 
@@ -76,12 +84,43 @@ NAN_METHOD(NodeGitWrapper<Traits>::JSNewFunction) {
 }
 
 template<typename Traits>
+void NodeGitWrapper<Traits>::SetNativeOwners(v8::Local<v8::Object> owners) {
+  assert(owners->IsArray() || owners->IsObject());
+  Nan::HandleScope scope;
+  std::unique_ptr< std::vector<nodegit::TrackerWrap*> > trackerOwners = 
+    std::make_unique< std::vector<nodegit::TrackerWrap*> >();
+
+  if (owners->IsArray()) {
+    v8::Local<v8::Context> context = Nan::GetCurrentContext();
+    const v8::Local<v8::Array> ownersArray = owners.As<v8::Array>();
+    const uint32_t numOwners = ownersArray->Length();
+
+    for (uint32_t i = 0; i < numOwners; ++i) {
+      v8::Local<v8::Value> value = ownersArray->Get(context, i).ToLocalChecked();
+      const v8::Local<v8::Object> object = value.As<v8::Object>();
+      Nan::ObjectWrap *objectWrap = Nan::ObjectWrap::Unwrap<Nan::ObjectWrap>(object);
+      trackerOwners->push_back(static_cast<nodegit::TrackerWrap*>(objectWrap));
+    }
+  }
+  else if (owners->IsObject()) {
+    Nan::ObjectWrap *objectWrap = Nan::ObjectWrap::Unwrap<Nan::ObjectWrap>(owners);
+    trackerOwners->push_back(static_cast<nodegit::TrackerWrap*>(objectWrap));
+  }
+
+  SetTrackerWrapOwners(std::move(trackerOwners));
+}
+
+template<typename Traits>
 v8::Local<v8::Value> NodeGitWrapper<Traits>::New(const typename Traits::cType *raw, bool selfFreeing, v8::Local<v8::Object> owner) {
   Nan::EscapableHandleScope scope;
   Local<v8::Value> argv[3] = { Nan::New<External>((void *)raw), Nan::New(selfFreeing), owner };
+  nodegit::Context *nodegitContext = nodegit::Context::GetCurrentContext();
+  Local<Function> constructor_template = nodegitContext->GetFromPersistent(
+    std::string(Traits::className()) + "::Template"
+  ).As<Function>();
   return scope.Escape(
     Nan::NewInstance(
-      Nan::New(constructor_template),
+      constructor_template,
       owner.IsEmpty() ? 2 : 3, // passing an empty handle as part of the arguments causes a crash
       argv
     ).ToLocalChecked());
@@ -98,13 +137,10 @@ void NodeGitWrapper<Traits>::ClearValue() {
 }
 
 template<typename Traits>
-Nan::Persistent<v8::Function> NodeGitWrapper<Traits>::constructor_template;
+thread_local int NodeGitWrapper<Traits>::SelfFreeingInstanceCount;
 
 template<typename Traits>
-int NodeGitWrapper<Traits>::SelfFreeingInstanceCount;
-
-template<typename Traits>
-int NodeGitWrapper<Traits>::NonSelfFreeingConstructedCount;
+thread_local int NodeGitWrapper<Traits>::NonSelfFreeingConstructedCount;
 
 template<typename Traits>
 NAN_METHOD(NodeGitWrapper<Traits>::GetSelfFreeingInstanceCount) {
@@ -120,4 +156,31 @@ template<typename Traits>
 void NodeGitWrapper<Traits>::InitializeTemplate(v8::Local<v8::FunctionTemplate> &tpl) {
   Nan::SetMethod(tpl, "getSelfFreeingInstanceCount", GetSelfFreeingInstanceCount);
   Nan::SetMethod(tpl, "getNonSelfFreeingConstructedCount", GetNonSelfFreeingConstructedCount);
+}
+
+template<typename Traits>
+void NodeGitWrapper<Traits>::Reference() {
+  Ref();
+  for (auto &i : referenceCallbacks) {
+    i.second();
+  }
+}
+
+template<typename Traits>
+void NodeGitWrapper<Traits>::Unreference() {
+  Unref();
+  for (auto &i : unreferenceCallbacks) {
+    i.second();
+  }
+}
+
+template<typename Traits>
+void NodeGitWrapper<Traits>::AddReferenceCallbacks(size_t fieldIndex, std::function<void()> refCb, std::function<void()> unrefCb) {
+  referenceCallbacks[fieldIndex] = refCb;
+  unreferenceCallbacks[fieldIndex] = unrefCb;
+}
+
+template<typename Traits>
+void NodeGitWrapper<Traits>::SaveCleanupHandle(std::shared_ptr<nodegit::CleanupHandle> cleanupHandle) {
+  childCleanupVector.push_back(cleanupHandle);
 }

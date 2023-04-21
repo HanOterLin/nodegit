@@ -5,6 +5,8 @@
 #include <string>
 
 #include "async_baton.h"
+#include "async_worker.h"
+#include "lock_master.h"
 #include "promise_completion.h"
 
 extern "C" {
@@ -26,8 +28,7 @@ using namespace v8;
 
 class ConvenientHunk : public Nan::ObjectWrap {
   public:
-    static Nan::Persistent<Function> constructor_template;
-    static void InitializeComponent (v8::Local<v8::Object> target);
+    static void InitializeComponent (v8::Local<v8::Object> target, nodegit::Context *nodegitContext);
 
     static v8::Local<v8::Value> New(void *raw);
 
@@ -35,8 +36,15 @@ class ConvenientHunk : public Nan::ObjectWrap {
     char *GetHeader();
     size_t GetSize();
 
+    void Reference();
+    void Unreference();
+
   private:
     ConvenientHunk(HunkData *hunk);
+    ConvenientHunk(const ConvenientHunk &) = delete;
+    ConvenientHunk(ConvenientHunk &&) = delete;
+    ConvenientHunk &operator=(const ConvenientHunk &) = delete;
+    ConvenientHunk &operator=(ConvenientHunk &&) = delete;
     ~ConvenientHunk();
 
     HunkData *hunk;
@@ -55,16 +63,22 @@ class ConvenientHunk : public Nan::ObjectWrap {
       HunkData *hunk;
       std::vector<git_diff_line *> *lines;
     };
-    class LinesWorker : public Nan::AsyncWorker {
+    class LinesWorker : public nodegit::AsyncWorker {
       public:
         LinesWorker(
             LinesBaton *_baton,
             Nan::Callback *callback
-        ) : Nan::AsyncWorker(callback)
+        ) : nodegit::AsyncWorker(callback, "nodegit:AsyncWorker:ConvenientHunk:Lines")
           , baton(_baton) {};
-        ~LinesWorker() {};
+        LinesWorker(const LinesWorker &) = delete;
+        LinesWorker(LinesWorker &&) = delete;
+        LinesWorker &operator=(const LinesWorker &) = delete;
+        LinesWorker &operator=(LinesWorker &&) = delete;
+        ~LinesWorker(){};
         void Execute();
+        void HandleErrorCallback();
         void HandleOKCallback();
+        nodegit::LockMaster AcquireLocks();
 
       private:
         LinesBaton *baton;

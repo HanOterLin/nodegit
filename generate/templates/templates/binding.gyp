@@ -1,26 +1,38 @@
 {
   "variables": {
+    "variables": {
+      "target%": "none",
+    },
     "is_electron%": "<!(node ./utils/isBuildingForElectron.js <(node_root_dir))",
-    "is_IBMi%": "<!(node -p \"os.platform() == 'aix' && os.type() == 'OS400' ? 1 : 0\")"
+    "is_IBMi%": "<!(node -p \"os.platform() == 'aix' && os.type() == 'OS400' ? 1 : 0\")",
+    "electron_openssl_root%": "<!(node ./utils/getElectronOpenSSLRoot.js <(module_root_dir))",
+    "electron_openssl_static%": "<!(node -p \"process.platform !== 'linux' || process.env.NODEGIT_OPENSSL_STATIC_LINK === '1' ? 1 : 0\")",
+    "cxx_version%": "<!(node ./utils/defaultCxxStandard.js <(target))",
+    "has_cxxflags%": "<!(node -p \"process.env.CXXFLAGS ? 1 : 0\")",
+    "macOS_deployment_target": "10.11",
+    # https://github.com/nodejs/node-gyp/issues/2673
+    'openssl_fips': '',
   },
 
   "targets": [
     {
       "target_name": "acquireOpenSSL",
+        "type": "none",
         "conditions": [
-        ["<(is_electron) == 1 and OS != 'linux'", {
+        ["<(is_electron) == 1 and <!(node -p \"process.env.npm_config_openssl_dir ? 0 : 1\")", {
           "actions": [{
             "action_name": "acquire",
-            "action": ["node", "utils/acquireOpenSSL.js"],
-            "inputs": ["vendor/static_config/openssl_distributions.json"],
+            "action": ["node", "utils/acquireOpenSSL.js", "<(macOS_deployment_target)"],
+            "inputs": [""],
             "outputs": ["vendor/openssl"],
-            "message": "Acquiring OpensSL binaries and headers"
+            "message": "Acquiring OpenSSL binaries and headers"
           }]
         }]
       ]
     },
     {
       "target_name": "configureLibssh2",
+      "type": "none",
       "actions": [{
         "action_name": "configure",
         "action": ["node", "utils/configureLibssh2.js"],
@@ -47,20 +59,25 @@
       },
       "sources": [
         "src/async_baton.cc",
+        "src/async_worker.cc",
         "src/lock_master.cc",
         "src/reference_counter.cc",
+        "src/thread_pool.cc",
         "src/nodegit.cc",
         "src/init_ssh2.cc",
         "src/promise_completion.cc",
         "src/wrapper.cc",
         "src/functions/copy.cc",
         "src/functions/free.cc",
+        "src/cleanup_handle.cc",
         "src/convenient_patch.cc",
         "src/convenient_hunk.cc",
         "src/filter_registry.cc",
         "src/git_buf_converter.cc",
         "src/str_array_converter.cc",
-        "src/thread_pool.cc",
+        "src/context.cc",
+        "src/v8_helpers.cc",
+        "src/tracker_wrap.cc",
         {% each %}
           {% if type != "enum" %}
             "src/{{ name }}.cc",
@@ -71,7 +88,7 @@
       "include_dirs": [
         "vendor/libv8-convert",
         "vendor/libssh2/include",
-        "<!(node -e \"require('nan')\")"
+        "<!(node -e \"require('@axosoft/nan')\")"
       ],
 
       "cflags": [
@@ -100,19 +117,19 @@
             "conditions": [
               ["<(is_electron) == 1", {
                 "include_dirs": [
-                  "vendor/openssl/include"
+                  "<(electron_openssl_root)/include"
                 ],
                 "libraries": [
-                  "<(module_root_dir)/vendor/openssl/lib/libcrypto.a",
-                  "<(module_root_dir)/vendor/openssl/lib/libssl.a"
+                  "<(electron_openssl_root)/lib/libssl.a",
+                  "<(electron_openssl_root)/lib/libcrypto.a"
                 ]
               }]
             ],
             "xcode_settings": {
               "GCC_ENABLE_CPP_EXCEPTIONS": "YES",
-              "MACOSX_DEPLOYMENT_TARGET": "10.9",
+              "MACOSX_DEPLOYMENT_TARGET": "<(macOS_deployment_target)",
               'CLANG_CXX_LIBRARY': 'libc++',
-              'CLANG_CXX_LANGUAGE_STANDARD':'c++11',
+              'CLANG_CXX_LANGUAGE_STANDARD':'c++<(cxx_version)',
 
               "WARNING_CFLAGS": [
                 "-Wno-unused-variable",
@@ -127,10 +144,10 @@
           "OS=='win'", {
             "conditions": [
               ["<(is_electron) == 1", {
-                "include_dirs": ["vendor/openssl/include"],
+                "include_dirs": ["<(electron_openssl_root)/include"],
                 "libraries": [
-                  "<(module_root_dir)/vendor/openssl/lib/libcrypto.lib",
-                  "<(module_root_dir)/vendor/openssl/lib/libssl.lib"
+                  "<(electron_openssl_root)/lib/libcrypto.lib",
+                  "<(electron_openssl_root)/lib/libssl.lib"
                 ]
               }]
             ],
@@ -140,6 +157,7 @@
             "msvs_settings": {
               "VCCLCompilerTool": {
                 "AdditionalOptions": [
+                  "/std:c++<(cxx_version)",
                   "/EHsc"
                 ]
               },
@@ -161,21 +179,31 @@
             "<!(krb5-config gssapi --libs)"
           ]
         }],
-        [
-          "OS=='linux' or OS.endswith('bsd') or <(is_IBMi) == 1", {
-            "cflags": [
-              "-std=c++11"
-            ]
-          }
-        ],
-        [
-          "OS.endswith('bsd') or (<(is_electron) == 1 and OS=='linux') or <(is_IBMi) == 1", {
-            "libraries": [
-              "-lcrypto",
-              "-lssl"
-            ],
-          }
-        ],
+        ["OS=='linux' or OS.endswith('bsd') or <(is_IBMi) == 1", {
+          "conditions": [
+            ["<(has_cxxflags) == 0", {
+              "cflags_cc": [
+                "-std=c++<(cxx_version)"
+              ],
+            }],
+            ["<(is_electron) == 1 and <(electron_openssl_static) == 1", {
+              "include_dirs": [
+                "<(electron_openssl_root)/include"
+              ],
+              "libraries": [
+                # this order is significant on centos7 apparently...
+                "<(electron_openssl_root)/lib/libssl.a",
+                "<(electron_openssl_root)/lib/libcrypto.a"
+              ]
+            }],
+            ["<(is_electron) == 1 and <(electron_openssl_static) != 1", {
+              "libraries": [
+                "-lcrypto",
+                "-lssl"
+              ]
+            }]
+          ],
+        }],
         [
           "<(is_IBMi) == 1", {
             "include_dirs": [

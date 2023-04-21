@@ -2,15 +2,21 @@
 #define {{ cppClassName|upper }}_H
 #include <nan.h>
 #include <string>
-#include <queue>
 #include <utility>
-#include <unordered_map>
+#include <algorithm>
+#include <set>
+#include <unordered_set>
 #include <sstream>
 
 #include "async_baton.h"
+#include "async_worker.h"
+#include "cleanup_handle.h"
+#include "context.h"
+#include "lock_master.h"
 #include "nodegit_wrapper.h"
 #include "promise_completion.h"
 #include "reference_counter.h"
+#include "worker_pool.h"
 
 extern "C" {
 #include <git2.h>
@@ -55,7 +61,12 @@ class {{ cppClassName }} : public
     friend class NodeGitWrapper<{{ cppClassName }}Traits>;
   {%endif %}
   public:
-    static void InitializeComponent (v8::Local<v8::Object> target);
+    {{ cppClassName }}(const {{ cppClassName }} &) = delete;
+    {{ cppClassName }}({{ cppClassName }} &&) = delete;
+    {{ cppClassName }} &operator=(const {{ cppClassName }} &) = delete;
+    {{ cppClassName }} &operator=({{ cppClassName }} &&) = delete;
+
+    static void InitializeComponent (v8::Local<v8::Object> target, nodegit::Context *nodegitContext);
 
     {% each functions as function %}
       {% if not function.ignore %}
@@ -70,15 +81,18 @@ class {{ cppClassName }} : public
             {% endeach %}
     );
 
+    static void {{ function.cppFunctionName }}_{{ arg.name }}_cancelAsync(void *baton);
     static void {{ function.cppFunctionName }}_{{ arg.name }}_async(void *baton);
-    static void {{ function.cppFunctionName }}_{{ arg.name }}_promiseCompleted(bool isFulfilled, AsyncBaton *_baton, v8::Local<v8::Value> result);
-    struct {{ function.cppFunctionName }}_{{ arg.name|titleCase }}Baton : public AsyncBatonWithResult<{{ arg.return.type }}> {
+    static void {{ function.cppFunctionName }}_{{ arg.name }}_promiseCompleted(bool isFulfilled, nodegit::AsyncBaton *_baton, v8::Local<v8::Value> result);
+    class {{ function.cppFunctionName }}_{{ arg.name|titleCase }}Baton : public nodegit::AsyncBatonWithResult<{{ arg.return.type }}> {
+    public:
       {% each arg.args|argsInfo as cbArg %}
       {{ cbArg.cType }} {{ cbArg.name }};
       {% endeach %}
 
+
       {{ function.cppFunctionName }}_{{ arg.name|titleCase }}Baton(const {{ arg.return.type }} &defaultResult)
-        : AsyncBatonWithResult<{{ arg.return.type }}>(defaultResult) {
+        : nodegit::AsyncBatonWithResult<{{ arg.return.type }}>(defaultResult) {
         }
     };
           {% endif %}
@@ -104,16 +118,6 @@ class {{ cppClassName }} : public
     ~{{ cppClassName }}();
     {%endif%}
 
-    {% each functions as function %}
-      {% if not function.ignore %}
-        {% each function.args as arg %}
-          {% if arg.saveArg %}
-    Nan::Persistent<Object> {{ function.cppFunctionName }}_{{ arg.name }};
-          {% endif %}
-        {% endeach %}
-      {% endif %}
-    {% endeach %}
-
     {%each fields as field%}
       {%if not field.ignore%}
     static NAN_METHOD({{ field.cppFunctionName }});
@@ -137,17 +141,29 @@ class {{ cppClassName }} : public
           {%endif%}
         {%endif%}
       {%endeach%}
+      {% if function.return.isResultOrError %}
+      {% elsif function.return.isErrorCode %}
+      {% elsif function.return.cType != 'void' %}
+        {{ function.return.cType }} result;
+      {% endif %}
     };
-    class {{ function.cppFunctionName }}Worker : public Nan::AsyncWorker {
+    class {{ function.cppFunctionName }}Worker : public nodegit::AsyncWorker {
       public:
         {{ function.cppFunctionName }}Worker(
             {{ function.cppFunctionName }}Baton *_baton,
-            Nan::Callback *callback
-        ) : Nan::AsyncWorker(callback)
+            Nan::Callback *callback,
+            std::map<std::string, std::shared_ptr<nodegit::CleanupHandle>> &cleanupHandles
+        ) : nodegit::AsyncWorker(callback, "nodegit:AsyncWorker:{{ cppClassName }}:{{ function.cppFunctionName }}", cleanupHandles)
           , baton(_baton) {};
+        {{ function.cppFunctionName }}Worker(const {{ function.cppFunctionName }}Worker &) = delete;
+        {{ function.cppFunctionName }}Worker({{ function.cppFunctionName }}Worker &&) = delete;
+        {{ function.cppFunctionName }}Worker &operator=(const {{ function.cppFunctionName }}Worker &) = delete;
+        {{ function.cppFunctionName }}Worker &operator=({{ function.cppFunctionName }}Worker &&) = delete;
         ~{{ function.cppFunctionName }}Worker() {};
         void Execute();
+        void HandleErrorCallback();
         void HandleOKCallback();
+        nodegit::LockMaster AcquireLocks();
 
       private:
         {{ function.cppFunctionName }}Baton *baton;
@@ -176,6 +192,11 @@ class {{ cppClassName }} : public
             {%endif%}
           {%endeach%}
       }
+
+      {{ function.cppFunctionName }}_globalPayload(const {{ function.cppFunctionName }}_globalPayload &) = delete;
+      {{ function.cppFunctionName }}_globalPayload({{ function.cppFunctionName }}_globalPayload &&) = delete;
+      {{ function.cppFunctionName }}_globalPayload &operator=(const {{ function.cppFunctionName }}_globalPayload &) = delete;
+      {{ function.cppFunctionName }}_globalPayload &operator=({{ function.cppFunctionName }}_globalPayload &&) = delete;
 
       ~{{ function.cppFunctionName }}_globalPayload() {
           {%each function.args as arg %}

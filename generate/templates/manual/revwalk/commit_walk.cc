@@ -40,6 +40,11 @@ public:
     }
   }
 
+  CommitModel(const CommitModel &) = delete;
+  CommitModel(CommitModel &&) = delete;
+  CommitModel &operator=(const CommitModel &) = delete;
+  CommitModel &operator=(CommitModel &&) = delete;
+
   v8::Local<v8::Value> toJavascript() {
     if (!fetchSignature) {
       v8::Local<v8::Value> commitObject = GitCommit::New(
@@ -107,21 +112,15 @@ NAN_METHOD(GitRevwalk::CommitWalk) {
     return Nan::ThrowError("Max count is required and must be a number.");
   }
 
-  if (info.Length() == 1 || (info.Length() == 2 && !info[1]->IsFunction())) {
+  if (info.Length() >= 3 && !info[1]->IsNull() && !info[1]->IsUndefined() && !info[1]->IsObject()) {
+    return Nan::ThrowError("Options must be an object, null, or undefined.");
+  }
+
+  if (!info[info.Length() - 1]->IsFunction()) {
     return Nan::ThrowError("Callback is required and must be a Function.");
   }
 
-  if (info.Length() >= 3) {
-    if (!info[1]->IsNull() && !info[1]->IsUndefined() && !info[1]->IsObject()) {
-      return Nan::ThrowError("Options must be an object, null, or undefined.");
-    }
-
-    if (!info[2]->IsFunction()) {
-      return Nan::ThrowError("Callback is required and must be a Function.");
-    }
-  }
-
-  CommitWalkBaton* baton = new CommitWalkBaton;
+  CommitWalkBaton* baton = new CommitWalkBaton();
 
   baton->error_code = GIT_OK;
   baton->error = NULL;
@@ -141,12 +140,19 @@ NAN_METHOD(GitRevwalk::CommitWalk) {
     baton->returnPlainObjects = false;
   }
   baton->walk = Nan::ObjectWrap::Unwrap<GitRevwalk>(info.This())->GetValue();
-  Nan::Callback *callback = new Nan::Callback(Local<Function>::Cast(info[1]->IsFunction() ? info[1] : info[2]));
-  CommitWalkWorker *worker = new CommitWalkWorker(baton, callback);
-  worker->SaveToPersistent("commitWalk", info.This());
+  Nan::Callback *callback = new Nan::Callback(Local<Function>::Cast(info[info.Length() - 1]));
+  std::map<std::string, std::shared_ptr<nodegit::CleanupHandle>> cleanupHandles;
+  CommitWalkWorker *worker = new CommitWalkWorker(baton, callback, cleanupHandles);
+  worker->Reference<GitRevwalk>("commitWalk", info.This());
 
-  Nan::AsyncQueueWorker(worker);
+  nodegit::Context *nodegitContext = reinterpret_cast<nodegit::Context *>(info.Data().As<External>()->Value());
+  nodegitContext->QueueWorker(worker);
   return;
+}
+
+nodegit::LockMaster GitRevwalk::CommitWalkWorker::AcquireLocks() {
+  nodegit::LockMaster lockMaster(true);
+  return lockMaster;
 }
 
 void GitRevwalk::CommitWalkWorker::Execute() {
@@ -201,6 +207,26 @@ void GitRevwalk::CommitWalkWorker::Execute() {
   }
 }
 
+void GitRevwalk::CommitWalkWorker::HandleErrorCallback() {
+  if (baton->error) {
+    if (baton->error->message) {
+      free((void *)baton->error->message);
+    }
+
+    free((void *)baton->error);
+  }
+
+  auto out = static_cast<std::vector<CommitModel *> *>(baton->out);
+  while (out->size()) {
+    delete out->back();
+    out->pop_back();
+  }
+
+  delete out;
+
+  delete baton;
+}
+
 void GitRevwalk::CommitWalkWorker::HandleOKCallback() {
   if (baton->out != NULL) {
     std::vector<CommitModel *> *out = static_cast<std::vector<CommitModel *> *>(baton->out);
@@ -244,4 +270,6 @@ void GitRevwalk::CommitWalkWorker::HandleOKCallback() {
   } else {
     callback->Call(0, NULL, async_resource);
   }
+
+  delete baton;
 }

@@ -30,7 +30,7 @@ module.exports = function install() {
     return Promise.resolve();
   }
 
-  return exec("node \"" + path.join(rootPath, "dist/nodegit.js\""))
+  return exec("node \"" + path.join(rootPath, "lib/nodegit.js\""))
     .catch(function(e) {
       if (~e.toString().indexOf("Module version mismatch")) {
         console.warn(
@@ -46,7 +46,7 @@ module.exports = function install() {
       }
     })
     .then(function() {
-      // Is we're using NodeGit from a package manager then let's clean up after
+      // If we're using NodeGit from a package manager then let's clean up after
       // ourselves when we install successfully.
       if (!buildFlags.mustBuild) {
         // We can't remove the source files yet because apparently the

@@ -1,20 +1,22 @@
 NAN_METHOD(GitRepository::GetSubmodules)
 {
-  if (info.Length() == 0 || !info[0]->IsFunction()) {
+  if (!info[info.Length() - 1]->IsFunction()) {
     return Nan::ThrowError("Callback is required and must be a Function.");
   }
 
-  GetSubmodulesBaton* baton = new GetSubmodulesBaton;
+  GetSubmodulesBaton* baton = new GetSubmodulesBaton();
 
   baton->error_code = GIT_OK;
   baton->error = NULL;
   baton->out = new std::vector<git_submodule *>;
   baton->repo = Nan::ObjectWrap::Unwrap<GitRepository>(info.This())->GetValue();
 
-  Nan::Callback *callback = new Nan::Callback(Local<Function>::Cast(info[0]));
-  GetSubmodulesWorker *worker = new GetSubmodulesWorker(baton, callback);
-  worker->SaveToPersistent("repo", info.This());
-  Nan::AsyncQueueWorker(worker);
+  Nan::Callback *callback = new Nan::Callback(Local<Function>::Cast(info[info.Length() - 1]));
+  std::map<std::string, std::shared_ptr<nodegit::CleanupHandle>> cleanupHandles;
+  GetSubmodulesWorker *worker = new GetSubmodulesWorker(baton, callback, cleanupHandles);
+  worker->Reference<GitRepository>("repo", info.This());
+  nodegit::Context *nodegitContext = reinterpret_cast<nodegit::Context *>(info.Data().As<External>()->Value());
+  nodegitContext->QueueWorker(worker);
   return;
 }
 
@@ -35,11 +37,14 @@ int foreachSubmoduleCB(git_submodule *submodule, const char *name, void *void_pa
   return result;
 }
 
+nodegit::LockMaster GitRepository::GetSubmodulesWorker::AcquireLocks() {
+  nodegit::LockMaster lockMaster(true, baton->repo);
+  return lockMaster;
+}
+
 void GitRepository::GetSubmodulesWorker::Execute()
 {
   giterr_clear();
-
-  LockMaster lockMaster(true, baton->repo);
 
   submodule_foreach_payload payload { baton->repo, baton->out };
   baton->error_code = git_submodule_foreach(baton->repo, foreachSubmoduleCB, (void *)&payload);
@@ -56,6 +61,25 @@ void GitRepository::GetSubmodulesWorker::Execute()
     delete baton->out;
     baton->out = NULL;
   }
+}
+
+void GitRepository::GetSubmodulesWorker::HandleErrorCallback() {
+  if (baton->error) {
+    if (baton->error->message) {
+      free((void *)baton->error->message);
+    }
+
+    free((void *)baton->error);
+  }
+
+  while (baton->out->size()) {
+    git_submodule_free(baton->out->back());
+    baton->out->pop_back();
+  }
+
+  delete baton->out;
+
+  delete baton;
 }
 
 void GitRepository::GetSubmodulesWorker::HandleOKCallback()
@@ -112,4 +136,6 @@ void GitRepository::GetSubmodulesWorker::HandleOKCallback()
   {
     callback->Call(0, NULL, async_resource);
   }
+
+  delete baton;
 }
